@@ -296,7 +296,7 @@ const UNITS = [
 
 /* ===================== ESTADO ===================== */
 const KEY="esp_ranieri_v1";
-const blank=()=>({xp:0,streak:0,lastDay:"",done:{},errors:{},hist:[],updated:0});
+const blank=()=>({xp:0,streak:0,lastDay:"",done:{},errors:{},hist:[],box:{},updated:0});
 let S=blank();
 try{const r=localStorage.getItem(KEY); if(r) S=Object.assign(blank(),JSON.parse(r));}catch(e){}
 let DB=null;
@@ -446,6 +446,38 @@ function buildLesson(unit,level){
   }
   return ex;
 }
+/* ===== Repetição espaçada (caixas) =====
+   Cada palavra/frase aprendida tem uma caixa 0–5. Acertou sobe, errou volta pra 1.
+   Quanto maior a caixa, mais tempo até voltar e MAIS DIFÍCIL o exercício
+   (caixa baixa = reconhecer; média = montar/escutar; alta = escrever/falar). */
+const GAP=[0,1,2,4,7,15];
+function addDays(n){const d=new Date(Date.now()+n*864e5);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function seen(es,kind,u){ if(!S.box[es]) S.box[es]={b:0,due:today(),kind,u}; }
+function updBox(it,ok){
+  const r=S.box[it.es]||{b:0,kind:it.kind,u:it.u};
+  if(L&&L._boxed&&L._boxed[it.es]){ if(!ok){r.b=1;r.due=addDays(0);} S.box[it.es]=r; return; } // 1 vez por lição
+  if(L){L._boxed=L._boxed||{}; L._boxed[it.es]=1;}
+  r.b=ok?Math.min(5,r.b+1):1; r.due=addDays(ok?GAP[r.b]:0); S.box[it.es]=r;
+}
+function findItem(es){for(const u of UNITS){const w=u.learn.find(x=>x.es===es); if(w)return{it:w,unit:u,kind:"w"}; const f=u.frases.find(x=>x.es===es); if(f)return{it:f,unit:u,kind:"f"};}return null;}
+function dueList(){const t=today();return Object.entries(S.box).filter(([k,v])=>v.due<=t&&findItem(k)).sort((a,b)=>a[1].b-b[1].b).map(([k])=>k);}
+function exFor(es){
+  const fi=findItem(es); if(!fi)return null; const b=(S.box[es]||{b:0}).b, {it,unit,kind}=fi;
+  const r=a=>a[Math.random()*a.length|0];
+  if(kind==="w"){
+    if(b<=1) return r([{t:"choosePT",it,pool:unit.learn},{t:"listenChoose",it,pool:unit.learn}]);
+    if(b<=3) return r([{t:"chooseES",it,pool:unit.learn},{t:"listenChoose",it,pool:unit.learn}]);
+    return r([{t:"type",f:it},{t:"speak",f:it}]);
+  }
+  if(b<=1) return r([{t:"chooseF",f:it,pool:unit.frases},{t:"listenChooseF",f:it,pool:unit.frases}]);
+  if(b<=3) return r([{t:"tiles",f:it,unit},{t:"listenTiles",f:it,unit},{t:"gap",f:it,unit},{t:"tilesPT",f:it,unit}]);
+  return r([{t:"type",f:it},{t:"speak",f:it},{t:"listenTiles",f:it,unit}]);
+}
+function buildDaily(){
+  let keys=dueList();
+  if(keys.length<6){ const extra=Object.entries(S.box).filter(([k])=>!keys.includes(k)&&findItem(k)).sort((a,b)=>a[1].b-b[1].b).map(([k])=>k); keys=keys.concat(extra.slice(0,6-keys.length)); }
+  return shuf(keys.slice(0,14)).map(exFor).filter(Boolean);
+}
 function buildReview(){
   const errs=Object.values(S.errors).sort((a,b)=>b.n-a.n).slice(0,8);
   const ex=[];
@@ -473,7 +505,8 @@ function home(){
   let h=`<div class="top"><span>🇵🇾 Espanhol</span><span class="sp"></span>
     <span class="pill">🔥 ${S.streak}${streakOk?"":" <small>(faz uma hoje)</small>"}</span><span class="pill">⭐ ${S.xp}</span><button class="sbtn" id="snd">${SOUND?"🔔":"🔕"}</button></div>
     <h1>Tua trilha</h1><p class="sub">Primeiro tu aprende, depois pratica. Nível 1 ensina, 2 monta frases, 3 é o desafio.</p>`;
-  if(nErr) h+=`<button class="rev" id="rev">🔁 Revisar o que tu errou (${nErr})<small>As palavras e frases que te pegaram voltam até fixar.</small></button>`;
+  const nDue=dueList().length, nBox=Object.keys(S.box).length;
+  if(nBox) h+=`<button class="rev" id="rev">🧠 Treino do dia ${nDue?`(${nDue} pra revisar)`:"(tudo em dia ✓)"}<small>Revisa o que tu já aprendeu. Quanto mais tu sabe, mais difícil fica: escolher → montar → escrever e falar.</small></button>`;
   UNITS.forEach((u,i)=>{
     const st=unitState(i);
     const names=["1 · Aprender","2 · Frases","3 · Desafio"];
@@ -485,15 +518,26 @@ function home(){
     });
     h+=`</div></div>`;
   });
-  h+=`<p class="note">Dica: aperta 🔊 sempre e repete em voz alta. 🐢 fala devagar.</p>`;
+  h+=`<p class="note">Dica: aperta 🔊 sempre e repete em voz alta. 🐢 fala devagar.</p>
+    <p class="note"><button class="sbtn" id="exp">📋 Copiar progresso pro Jarvis</button></p><div id="expo"></div>`;
   $("#app").innerHTML=h;
   document.querySelectorAll(".lvb").forEach(b=>b.onclick=()=>start(+b.dataset.u,+b.dataset.l));
   const r=$("#rev"); if(r) r.onclick=()=>start(-1,0);
+  $("#exp").onclick=()=>{const t=progressText(); let ok=false;
+    try{navigator.clipboard.writeText(t).then(()=>{$("#exp").textContent="✓ Copiado! Cola no chat do Jarvis";}).catch(()=>showExp(t));}catch(e){showExp(t);} };
   $("#snd").onclick=()=>{SOUND=!SOUND;try{localStorage.setItem("esp_sound",SOUND?"1":"0");}catch(e){} home(); if(SOUND)SFX.ok();};
+}
+function showExp(t){$("#expo").innerHTML=`<textarea style="margin:0 16px;width:calc(100% - 32px);font-size:13px" readonly>${esc(t)}</textarea><p class="note">Seleciona tudo, copia e cola no chat.</p>`;}
+function progressText(){
+  const done=UNITS.map(u=>(S.done[u.id]||[]).length?`${u.id}:${(S.done[u.id]||[]).sort().join("")}`:"").filter(Boolean).join(" ")||"nada";
+  const bx=Object.entries(S.box); const dom=bx.filter(([k,v])=>v.b>=4).map(([k])=>k), mid=bx.filter(([k,v])=>v.b>=2&&v.b<4).map(([k])=>k), low=bx.filter(([k,v])=>v.b<2).map(([k])=>k);
+  const errs=Object.values(S.errors).sort((a,b)=>b.n-a.n).slice(0,10).map(e=>`${e.es} (${e.n}x)`);
+  const last=S.hist.slice(-6).map(h=>`${h.d} ${h.u} n${h.l} ${h.acc}%`);
+  return `PROGRESSO ESPANHOL ${today()}\nXP ${S.xp} · sequência ${S.streak} dias\nNíveis feitos: ${done}\nDomina (${dom.length}): ${dom.join(" | ")||"-"}\nFirmando (${mid.length}): ${mid.join(" | ")||"-"}\nAinda fraco (${low.length}): ${low.join(" | ")||"-"}\nMais errados: ${errs.join(" | ")||"-"}\nÚltimas lições: ${last.join(" ; ")||"-"}`;
 }
 function start(ui,level){
   const unit=ui>=0?UNITS[ui]:null;
-  const ex=ui>=0?buildLesson(unit,level):buildReview();
+  const ex=ui>=0?buildLesson(unit,level):buildDaily();
   if(!ex.length){home();return;}
   L={ui,level,unit,ex,i:0,hearts:5,mist:0,graded:0,retry:[],pp:0,combo:0};
   view="lesson"; render();
@@ -529,6 +573,7 @@ function next(){L.i++;render();}
 // registra resultado: ok, resposta certa, explicação, item p/ revisão
 function grade(ok,correct,why,errItem){
   L.graded++;
+  if(errItem&&errItem.es) updBox(errItem,ok);
   const e=L.ex[L.i];
   if(!ok){
     L.mist++; L.hearts--;
@@ -562,7 +607,7 @@ intro(e){
   footNext("BORA");
 },
 card(e){
-  const it=e.it;
+  const it=e.it; seen(it.es,"w",unitOfItem(it));
   $("#body").innerHTML=`<div class="kind">Palavra nova</div><div class="learn">
     <div class="bigspk">${spkBtn(it.es)}${slowBtn(it.es)}</div>
     <div class="es">${esc(it.es)}</div><div class="pt">${esc(it.pt)}</div>
@@ -573,7 +618,7 @@ card(e){
   footNext("ENTENDI");
 },
 cardF(e){
-  const f=e.f;
+  const f=e.f; seen(f.es,"f",unitOfItem(f));
   $("#body").innerHTML=`<div class="kind">Frase nova</div><div class="learn">
     <div class="bigspk">${spkBtn(f.es)}${slowBtn(f.es)}</div>
     <div class="es" style="font-size:25px">${esc(f.es)}</div><div class="pt">${esc(f.pt)}</div>
