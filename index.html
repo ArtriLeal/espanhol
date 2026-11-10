@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Espanhol</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f8b7d">
+<link rel="icon" href="icon.svg">
+<style>
+:root{
+  --bg:#f6f4ef; --card:#fff; --ink:#1d2b2a; --muted:#6b7775; --line:#e3e0d8;
+  --pri:#0f8b7d; --pri-d:#0a6b60; --ok:#2f9e44; --ok-bg:#e6f6ea; --bad:#d9480f; --bad-bg:#fdeee6;
+  --gold:#f2a516; --tile:#fff; --tile-b:#d7d3c9;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+#app{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:14px;padding:14px 16px;font-weight:700}
+.top .sp{flex:1}
+.pill{display:inline-flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px 11px;font-size:15px}
+h1{font-size:22px;margin:4px 16px 2px}
+.sub{color:var(--muted);margin:0 16px 12px;font-size:15px}
+.unit{margin:10px 16px 16px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+.unit.locked{opacity:.55}
+.unit h2{margin:0 0 2px;font-size:18px}
+.unit p{margin:0 0 10px;color:var(--muted);font-size:14px}
+.lv{display:flex;gap:8px;flex-wrap:wrap}
+.lvb{flex:1;min-width:92px;border:2px solid var(--line);border-bottom-width:4px;background:#fff;border-radius:14px;padding:9px 6px;font-weight:700;font-size:14px;text-align:center}
+.lvb.done{border-color:var(--ok);color:var(--ok)}
+.lvb.next{border-color:var(--pri);background:var(--pri);color:#fff}
+.lvb:disabled{cursor:default}
+.rev{margin:0 16px 12px;width:calc(100% - 32px);border:2px solid var(--gold);border-bottom-width:4px;background:#fff8e6;border-radius:16px;padding:12px;font-weight:700;text-align:left}
+.rev small{display:block;font-weight:400;color:var(--muted)}
+/* lição */
+.lhead{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.x{border:0;background:none;font-size:24px;line-height:1;color:var(--muted);padding:0 4px}
+.bar{flex:1;height:14px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--pri);border-radius:99px;transition:width .3s}
+.hearts{font-weight:700;color:var(--bad)}
+.body{flex:1;padding:6px 18px 18px;display:flex;flex-direction:column}
+.kind{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--pri);margin:4px 0 6px}
+.q{font-size:21px;font-weight:700;margin:0 0 14px}
+.prompt{display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:20px}
+.spk{flex:none;width:52px;height:52px;border-radius:14px;border:0;background:var(--pri);color:#fff;font-size:22px;border-bottom:4px solid var(--pri-d)}
+.spk.small{width:40px;height:40px;font-size:17px;border-radius:12px}
+.spk.slow{background:#fff;color:var(--pri);border:2px solid var(--pri);border-bottom-width:4px}
+.bigspk{display:flex;gap:12px;justify-content:center;margin:18px 0 22px}
+.bigspk .spk{width:84px;height:84px;font-size:34px;border-radius:22px}
+.bigspk .spk.slow{width:64px;height:64px;font-size:22px;align-self:flex-end}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;background:#fff;border:2px solid var(--line);border-bottom-width:4px;border-radius:14px;padding:13px 14px;font-size:18px}
+.opt.sel{border-color:var(--pri);background:#e7f5f3}
+.opt.right{border-color:var(--ok);background:var(--ok-bg)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.pairs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pairs .opt{text-align:center;font-size:16px;padding:12px 6px}
+.pairs .opt.gone{visibility:hidden}
+.answer{min-height:62px;border-bottom:2px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;padding:6px 0 10px;margin-bottom:16px}
+.bank{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.tl{background:var(--tile);border:2px solid var(--tile-b);border-bottom-width:4px;border-radius:12px;padding:8px 13px;font-size:18px}
+.tl.used{visibility:hidden}
+textarea{width:100%;min-height:96px;border:2px solid var(--line);border-radius:14px;padding:12px;font:inherit;font-size:19px;resize:none;background:#fff}
+.dlg{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:14px}
+.dlg div{display:flex;gap:8px;align-items:center;padding:4px 0}
+.dlg b{color:var(--pri);min-width:22px}
+.learn{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;text-align:center;margin-top:6px}
+.learn .es{font-size:30px;font-weight:800;margin:10px 0 2px}
+.learn .pt{font-size:19px;color:var(--muted)}
+.learn .pr{margin-top:10px;font-size:15px;color:var(--ink);background:#f1efe9;border-radius:10px;padding:6px 10px;display:inline-block}
+.tip{text-align:left;margin-top:14px;background:#fff8e6;border-left:4px solid var(--gold);border-radius:8px;padding:10px 12px;font-size:15px}
+.intro{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;font-size:17px}
+.intro h3{margin:0 0 8px}
+.intro ul{padding-left:20px;margin:8px 0}
+.foot{position:sticky;bottom:0;padding:14px 18px 18px;background:var(--bg);border-top:2px solid transparent}
+.foot.ok{background:var(--ok-bg);border-top-color:var(--ok)}
+.foot.bad{background:var(--bad-bg);border-top-color:var(--bad)}
+.fb{margin-bottom:10px;font-size:16px}
+.fb strong{font-size:19px;display:block;margin-bottom:2px}
+.ok .fb strong{color:var(--ok)} .bad .fb strong{color:var(--bad)}
+.why{margin-top:6px;font-size:15px;color:var(--ink)}
+.go{width:100%;border:0;border-radius:16px;padding:15px;font-size:18px;font-weight:800;letter-spacing:.03em;color:#fff;background:var(--pri);border-bottom:4px solid var(--pri-d)}
+.go:disabled{background:#cfcbc1;border-bottom-color:#b9b5ab;color:#fff}
+.ok .go{background:var(--ok);border-bottom-color:#237a34}
+.bad .go{background:var(--bad);border-bottom-color:#a83a0c}
+.row{display:flex;gap:10px;margin-top:10px}
+.row .go{flex:1}
+.ghost{background:#fff!important;color:var(--muted)!important;border:2px solid var(--line)!important;border-bottom-width:4px!important}
+.mic{width:100%;padding:18px;border-radius:18px;border:2px solid var(--pri);border-bottom-width:5px;background:#fff;color:var(--pri);font-weight:800;font-size:18px}
+.mic.on{background:var(--pri);color:#fff}
+.heard{margin-top:12px;color:var(--muted);text-align:center;min-height:24px}
+.end{text-align:center;padding:30px 20px}
+.end .big{font-size:56px}
+.stats{display:flex;gap:10px;justify-content:center;margin:18px 0}
+.stats div{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 16px;font-weight:800}
+.stats small{display:block;font-weight:400;color:var(--muted)}
+.note{margin:6px 16px 24px;color:var(--muted);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="audio.js"></script>
+<script>
+/* ===================== CONTEÚDO =====================
+   Cada unidade: intro (o que tu vai aprender), learn (cartões: es, pt, pr = pronúncia, tip),
+   frases (es, pt, why = explicação do erro comum) e diálogo de leitura.
+   Ordem pensada pra quem tá no começo: nada aparece em exercício sem ter sido ensinado antes. */
+const UNITS = [
+{ id:"u1", title:"Oi e tchau", desc:"Cumprimentar e responder",
+  intro:`<h3>Unidade 1 — Oi e tchau</h3>Tu vai aprender a cumprimentar alguém e responder "tudo bem".<ul>
+  <li>O <b>h</b> no espanhol é mudo: <b>hola</b> se fala "óla".</li>
+  <li>No Paraguai, no informal, usam <b>vos</b> no lugar de "tu". "¿Y vos?" = "E tu?"</li>
+  <li>Pergunta tem <b>¿</b> no começo e ? no fim. Não precisa decorar: só reconhecer.</li></ul>`,
+  learn:[
+    {es:"hola", pt:"oi / olá", pr:"óla", tip:"O H é sempre mudo."},
+    {es:"buenos días", pt:"bom dia", pr:"buênos días"},
+    {es:"buenas tardes", pt:"boa tarde", pr:"buênas tárdes"},
+    {es:"buenas noches", pt:"boa noite", pr:"buênas nótches", tip:"CH = \"tch\", igual tchau."},
+    {es:"¿cómo estás?", pt:"como tu tá?", pr:"cômo estás"},
+    {es:"bien", pt:"bem", pr:"biên"},
+    {es:"más o menos", pt:"mais ou menos", pr:"más o mênos"},
+    {es:"¿y vos?", pt:"e tu?", pr:"i vós", tip:"Paraguai e Argentina usam VOS no lugar de TÚ. Os dois tão certos."},
+    {es:"gracias", pt:"obrigado", pr:"grácias"},
+    {es:"chau", pt:"tchau", pr:"tcháu"},
+    {es:"hasta mañana", pt:"até amanhã", pr:"ásta manhána", tip:"Ñ = NH. Hasta: H mudo de novo."},
+  ],
+  frases:[
+    {es:"Hola, ¿cómo estás?", pt:"Oi, como tu tá?"},
+    {es:"Bien, gracias.", pt:"Bem, obrigado."},
+    {es:"Más o menos, ¿y vos?", pt:"Mais ou menos, e tu?"},
+    {es:"Buenos días.", pt:"Bom dia."},
+    {es:"Buenas noches, chau.", pt:"Boa noite, tchau."},
+    {es:"Hasta mañana.", pt:"Até amanhã.", why:"Mañana se escreve com Ñ (nh) só no segundo N."},
+  ],
+  dialogo:{linhas:[["A","Hola, buenos días."],["B","Hola. ¿Cómo estás?"],["A","Bien, gracias. ¿Y vos?"],["B","Más o menos."]],
+    perg:"Como a pessoa B tá?", certo:"Mais ou menos", erradas:["Bem","Cansada"]}
+},
+{ id:"u2", title:"Me apresentar", desc:"Nome, de onde é, trabalho",
+  intro:`<h3>Unidade 2 — Me apresentar</h3>Dizer teu nome, de onde tu é e com o que trabalha.<ul>
+  <li><b>Regra de ouro:</b> em espanhol o "yo" (eu) quase sempre <b>some</b>. O verbo já diz quem é: <b>Soy de Brasil</b>, não "Yo soy de Brasil".</li>
+  <li><b>LL</b> no Paraguai soa parecido com "j" ou "dj": <b>me llamo</b> ≈ "me jámo".</li>
+  <li><b>Vivir</b> = morar. "Vivo en Brasil" = moro no Brasil.</li></ul>`,
+  learn:[
+    {es:"me llamo", pt:"me chamo", pr:"me jámo", tip:"LL soa como \"j\" no Paraguai."},
+    {es:"¿cómo te llamás?", pt:"como tu te chama?", pr:"cômo te jamás", tip:"Com VOS o acento cai no fim: llamás."},
+    {es:"mucho gusto", pt:"prazer (em conhecer)", pr:"mútcho gústo"},
+    {es:"soy", pt:"eu sou", pr:"sói", tip:"Sem \"yo\": SOY já quer dizer \"eu sou\"."},
+    {es:"soy de Brasil", pt:"sou do Brasil", pr:"sói de brasíl"},
+    {es:"brasileño", pt:"brasileiro", pr:"brasilênho"},
+    {es:"vivo en", pt:"moro em", pr:"bívo en", tip:"V e B soam quase igual: \"bívo\"."},
+    {es:"trabajo", pt:"(eu) trabalho", pr:"trabárro", tip:"J = R forte, de garganta (igual \"rato\")."},
+    {es:"repartidor", pt:"entregador", pr:"rrepartidór"},
+  ],
+  frases:[
+    {es:"Me llamo Pedro.", pt:"Me chamo Pedro."},
+    {es:"¿Cómo te llamás?", pt:"Como tu te chama?"},
+    {es:"Mucho gusto.", pt:"Prazer."},
+    {es:"Soy de Brasil.", pt:"Sou do Brasil.", why:"Não precisa do \"yo\": SOY já é \"eu sou\"."},
+    {es:"Soy brasileño.", pt:"Sou brasileiro."},
+    {es:"Vivo en Brasil.", pt:"Moro no Brasil.", why:"Morar = VIVIR. \"Vivo en...\""},
+    {es:"Trabajo de repartidor.", pt:"Trabalho de entregador.", why:"TRABAJO com J. E sem o \"yo\" na frente."},
+  ],
+  dialogo:{linhas:[["A","Hola. ¿Cómo te llamás?"],["B","Me llamo Lucas. ¿Y vos?"],["A","Me llamo Pedro. Mucho gusto."],["B","Mucho gusto. ¿Sos de Paraguay?"],["A","No, soy de Brasil."]],
+    perg:"De onde o Pedro é?", certo:"Do Brasil", erradas:["Do Paraguai","Da Argentina"]}
+},
+{ id:"u3", title:"Números e dinheiro", desc:"Contar e perguntar preço",
+  intro:`<h3>Unidade 3 — Números e dinheiro</h3>Os números de 1 a 10, cem e mil, e como perguntar preço.<ul>
+  <li>No Paraguai o dinheiro é o <b>guaraní</b>. Os preços são em milhares: "diez mil" (10.000).</li>
+  <li><b>Plata</b> = dinheiro no dia a dia (dinero também serve).</li>
+  <li><b>Caro</b> e <b>barato</b> são iguais ao português. 😎</li></ul>`,
+  learn:[
+    {es:"uno", pt:"um", pr:"úno"},{es:"dos", pt:"dois", pr:"dós"},{es:"tres", pt:"três", pr:"trés"},
+    {es:"cuatro", pt:"quatro", pr:"kuátro"},{es:"cinco", pt:"cinco", pr:"sínko"},{es:"seis", pt:"seis", pr:"séis"},
+    {es:"siete", pt:"sete", pr:"siête"},{es:"ocho", pt:"oito", pr:"ótcho"},{es:"nueve", pt:"nove", pr:"nuêbe"},
+    {es:"diez", pt:"dez", pr:"diês"},{es:"cien", pt:"cem", pr:"siên"},{es:"mil", pt:"mil", pr:"mil"},
+    {es:"¿cuánto cuesta?", pt:"quanto custa?", pr:"kuánto kuêsta"},
+    {es:"la plata", pt:"o dinheiro", pr:"la pláta", tip:"Plata é prata, mas no dia a dia quer dizer dinheiro."},
+    {es:"caro", pt:"caro", pr:"káro"},{es:"barato", pt:"barato", pr:"baráto"},
+  ],
+  frases:[
+    {es:"¿Cuánto cuesta?", pt:"Quanto custa?", why:"CUESTA, com UE (custa)."},
+    {es:"Cuesta diez mil.", pt:"Custa dez mil."},
+    {es:"Es muy caro.", pt:"É muito caro.", why:"Muito = MUY (antes de adjetivo)."},
+    {es:"Es barato.", pt:"É barato."},
+    {es:"No tengo plata.", pt:"Não tenho dinheiro."},
+    {es:"Dos aguas, por favor.", pt:"Duas águas, por favor."},
+  ],
+  dialogo:{linhas:[["A","Hola. ¿Cuánto cuesta?"],["B","Cuesta cien mil."],["A","Es muy caro."],["B","¿Ochenta mil?"],["A","Bueno, gracias."]],
+    perg:"O que o cliente achou do primeiro preço?", certo:"Muito caro", erradas:["Barato","Bom"]}
+},
+{ id:"u4", title:"Comida", desc:"Fome, pedir e pagar",
+  intro:`<h3>Unidade 4 — Comida</h3>Dizer que tá com fome e pedir no restaurante.<ul>
+  <li>Fome, sede, sono e frio usam <b>tener</b> (ter): <b>tengo hambre</b> = "tenho fome". Nunca "estoy con hambre".</li>
+  <li><b>Exquisito</b> é falso amigo: quer dizer <b>delicioso</b>, não "esquisito".</li>
+  <li><b>Para llevar</b> = pra viagem / pra levar.</li></ul>`,
+  learn:[
+    {es:"tengo hambre", pt:"tô com fome", pr:"têngo ámbre", tip:"Fome com TENER. H mudo: \"ámbre\"."},
+    {es:"tengo sed", pt:"tô com sede", pr:"têngo séd"},
+    {es:"quiero", pt:"eu quero", pr:"kiêro"},
+    {es:"el agua", pt:"a água", pr:"él água"},
+    {es:"el pollo", pt:"o frango", pr:"él pójo", tip:"Falso amigo: pollo é FRANGO. Polvo é \"pó\"."},
+    {es:"el arroz", pt:"o arroz", pr:"él arrós"},
+    {es:"el pan", pt:"o pão", pr:"él pán"},
+    {es:"la cuenta", pt:"a conta", pr:"la kuênta"},
+    {es:"para llevar", pt:"pra viagem", pr:"pára jebár"},
+    {es:"exquisito", pt:"delicioso", pr:"eskisíto", tip:"Falso amigo! Exquisito = delicioso."},
+  ],
+  frases:[
+    {es:"Tengo hambre.", pt:"Tô com fome.", why:"Fome usa TENER: tengo hambre (não \"estoy con hambre\")."},
+    {es:"Tengo sed.", pt:"Tô com sede."},
+    {es:"Quiero pollo con arroz.", pt:"Quero frango com arroz.", why:"Com = CON."},
+    {es:"Un agua, por favor.", pt:"Uma água, por favor."},
+    {es:"La cuenta, por favor.", pt:"A conta, por favor."},
+    {es:"Para llevar, por favor.", pt:"Pra viagem, por favor."},
+    {es:"Está exquisito.", pt:"Tá delicioso."},
+  ],
+  dialogo:{linhas:[["A","Hola. Tengo hambre. ¿Qué hay?"],["B","Hay pollo con arroz."],["A","Quiero pollo con arroz, para llevar."],["B","Bueno. Son veinte mil."]],
+    perg:"O cliente vai comer lá?", certo:"Não, é pra viagem", erradas:["Sim, na mesa","Não pediu nada"]}
+},
+{ id:"u5", title:"Planos: voy a…", desc:"Hoje, amanhã e o que vai fazer",
+  intro:`<h3>Unidade 5 — Planos: voy a…</h3>Falar do que tu vai fazer.<ul>
+  <li>"Eu vou trabalhar" = <b>voy a trabajar</b>. O <b>a</b> entre "voy" e o verbo <b>nunca some</b>.</li>
+  <li>Veículo usa <b>en</b>: <b>en moto</b>, en auto, en colectivo (ônibus no Paraguai). Nunca "de moto".</li>
+  <li>Depois de <b>si</b> (se), o verbo vai conjugado: <b>si llueve</b> (se chover).</li></ul>`,
+  learn:[
+    {es:"voy a…", pt:"eu vou… (+ verbo)", pr:"bói a", tip:"Voy A trabajar, voy A comer. O A é obrigatório."},
+    {es:"hoy", pt:"hoje", pr:"ói", tip:"H mudo: \"ói\"."},
+    {es:"mañana", pt:"amanhã", pr:"manhána", tip:"Só o segundo N tem til: maÑana."},
+    {es:"trabajar", pt:"trabalhar", pr:"trabarrár"},
+    {es:"comer", pt:"comer", pr:"komér"},
+    {es:"dormir", pt:"dormir", pr:"dormír"},
+    {es:"hablar", pt:"falar", pr:"ablár", tip:"H mudo. Hablar = falar."},
+    {es:"en moto", pt:"de moto", pr:"en móto", tip:"Veículo = EN. En moto, en auto."},
+    {es:"el colectivo", pt:"o ônibus", pr:"él kolektíbo"},
+    {es:"si llueve", pt:"se chover", pr:"si juêbe", tip:"SI sem acento = se. SÍ com acento = sim."},
+  ],
+  frases:[
+    {es:"Hoy voy a trabajar.", pt:"Hoje vou trabalhar.", why:"VOY A + verbo. O A não pode faltar."},
+    {es:"Mañana voy a dormir mucho.", pt:"Amanhã vou dormir muito."},
+    {es:"Voy en moto.", pt:"Vou de moto.", why:"Veículo usa EN: en moto."},
+    {es:"Voy a trabajar en moto.", pt:"Vou trabalhar de moto.", why:"VOY A trabajar + EN moto."},
+    {es:"Mañana voy a hablar con mi papá.", pt:"Amanhã vou falar com meu pai.", why:"VOY A hablar. Papá com acento (papa = batata)."},
+    {es:"Si llueve, no voy a trabajar.", pt:"Se chover, não vou trabalhar.", why:"Depois de SI vem LLUEVE (conjugado), não llover."},
+    {es:"Hoy voy en colectivo.", pt:"Hoje vou de ônibus."},
+  ],
+  dialogo:{linhas:[["A","¿Qué vas a hacer mañana?"],["B","Mañana voy a trabajar en moto."],["A","¿Y si llueve?"],["B","Si llueve, voy a dormir. 😄"]],
+    perg:"O que a pessoa B faz se chover?", certo:"Vai dormir", erradas:["Vai trabalhar de moto","Vai de ônibus"]}
+},
+{ id:"u6", title:"Na entrega", desc:"Pacote, endereço, vizinho",
+  intro:`<h3>Unidade 6 — Na entrega</h3>O básico pra trabalhar de entregador.<ul>
+  <li><b>Dirección</b> = <b>endereço</b> (falso amigo!).</li>
+  <li><b>Paquete</b> se escreve com <b>QU</b> (som de K).</li>
+  <li><b>Derecha</b> = direita, <b>izquierda</b> = esquerda.</li></ul>`,
+  learn:[
+    {es:"el paquete", pt:"o pacote", pr:"él pakête", tip:"Som de K antes de E/I se escreve QU."},
+    {es:"entrego", pt:"eu entrego", pr:"entrêgo"},
+    {es:"la dirección", pt:"o endereço", pr:"la direksión", tip:"Falso amigo! Dirección = endereço."},
+    {es:"la calle", pt:"a rua", pr:"la káje"},
+    {es:"el vecino", pt:"o vizinho", pr:"él besíno"},
+    {es:"¿dónde está…?", pt:"onde fica…?", pr:"dónde está"},
+    {es:"aquí", pt:"aqui", pr:"akí"},
+    {es:"a la derecha", pt:"à direita", pr:"a la derêtcha"},
+    {es:"a la izquierda", pt:"à esquerda", pr:"a la iskiêrda"},
+  ],
+  frases:[
+    {es:"Tengo un paquete para vos.", pt:"Tenho um pacote pra ti."},
+    {es:"¿Cuál es la dirección?", pt:"Qual é o endereço?", why:"Endereço = DIRECCIÓN (feminino: la)."},
+    {es:"¿Dónde está la calle?", pt:"Onde fica a rua?"},
+    {es:"Está a la derecha.", pt:"Fica à direita."},
+    {es:"Dejo el paquete con el vecino.", pt:"Deixo o pacote com o vizinho."},
+    {es:"Entrego en moto.", pt:"Entrego de moto.", why:"De moto = EN moto."},
+  ],
+  dialogo:{linhas:[["A","Hola, tengo un paquete para Ana."],["B","Ana no está. Soy el vecino."],["A","¿Dejo el paquete con vos?"],["B","Sí, gracias."]],
+    perg:"Com quem fica o pacote?", certo:"Com o vizinho", erradas:["Com a Ana","Volta pra base"]}
+},
+];
+
+/* ===================== ESTADO ===================== */
+const KEY="esp_ranieri_v1";
+const blank=()=>({xp:0,streak:0,lastDay:"",done:{},errors:{},hist:[],updated:0});
+let S=blank();
+try{const r=localStorage.getItem(KEY); if(r) S=Object.assign(blank(),JSON.parse(r));}catch(e){}
+let DB=null;
+function today(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function save(){
+  S.updated=Date.now();
+  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  if(DB){ try{ DB.doc("progresso/main").set(JSON.parse(JSON.stringify(S))).catch(()=>{}); }catch(e){} }
+}
+(async()=>{ // progresso na nuvem (opcional): o Jarvis lê daqui
+  try{
+    if(!window.claude||!claude.use) return;
+    const db=await claude.use("db"); if(!db) return;
+    const snap=await db.doc("progresso/main").get();
+    const d=snap&&(typeof snap.data==="function"?snap.data():snap);
+    if(d&&d.updated&&d.updated>S.updated){S=Object.assign(blank(),d);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} if(view==="home")home();}
+    DB=db; if(!d||!d.updated||d.updated<S.updated) save();
+  }catch(e){}
+})();
+
+/* ===================== ÁUDIO ===================== */
+let VOICE=null;
+function pickVoice(){
+  if(!("speechSynthesis" in window))return;
+  const vs=speechSynthesis.getVoices(); if(!vs.length)return;
+  const pref=["es-AR","es-US","es-MX","es-ES"];
+  for(const p of pref){const v=vs.find(v=>v.lang.replace("_","-")===p); if(v){VOICE=v;return;}}
+  VOICE=vs.find(v=>v.lang.toLowerCase().startsWith("es"))||null;
+}
+if("speechSynthesis" in window){pickVoice(); speechSynthesis.onvoiceschanged=pickVoice;}
+let PLAYER=null, LAST_TTS=null, MIC="unknown", ACTX=null;
+function beep(freq,dur){ // "plim" de microfone, igual app de idioma
+  try{ ACTX=ACTX||new (window.AudioContext||window.webkitAudioContext)();
+    const o=ACTX.createOscillator(), g=ACTX.createGain(); o.frequency.value=freq||660; o.type="sine";
+    g.gain.setValueAtTime(.0001,ACTX.currentTime); g.gain.exponentialRampToValueAtTime(.25,ACTX.currentTime+.02);
+    g.gain.exponentialRampToValueAtTime(.0001,ACTX.currentTime+(dur||.18));
+    o.connect(g); g.connect(ACTX.destination); o.start(); o.stop(ACTX.currentTime+(dur||.18)+.02);
+  }catch(e){}
+}
+function ttsSay(t,slow){
+  if(!("speechSynthesis" in window))return;
+  try{speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(t.replace(/[¿¡…]/g,"")); LAST_TTS=u;
+    u.lang=VOICE?VOICE.lang:"es-ES"; if(VOICE)u.voice=VOICE; u.rate=slow?0.6:0.9;
+    speechSynthesis.speak(u);}catch(e){}
+}
+function say(t,slow){ // áudio gravado (voz argentina) embutido; se não tiver, usa a voz do celular
+  const k=t.replace(/[¿¡…]/g,"").replace(/\s+/g," ").trim().toLowerCase();
+  const b=window.AUDIO&&window.AUDIO[k];
+  if(!b){ttsSay(t,slow);return;}
+  try{
+    if(!PLAYER){PLAYER=new Audio();}
+    PLAYER.pause(); PLAYER.src="data:audio/mpeg;base64,"+b;
+    PLAYER.playbackRate=slow?0.7:1; if("preservesPitch" in PLAYER)PLAYER.preservesPitch=true;
+    const pr=PLAYER.play(); if(pr&&pr.catch)pr.catch(()=>{});
+  }catch(e){ttsSay(t,slow);}
+}
+
+/* ===================== UTIL ===================== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
+const pick=(a,n)=>shuf(a).slice(0,n);
+const clean=s=>s.toLowerCase().replace(/[¿?¡!.,…]/g,"").replace(/\s+/g," ").trim();
+const noAcc=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"");
+const words=s=>s.replace(/[¿?¡!.,…]/g,"").split(/\s+/).filter(Boolean);
+function sim(a,b){a=noAcc(clean(a));b=noAcc(clean(b));const m=a.length,n=b.length;if(!m||!n)return 0;
+  const d=Array.from({length:m+1},(_,i)=>[i]);for(let j=1;j<=n;j++)d[0][j]=j;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return 1-d[m][n]/Math.max(m,n);}
+const spkBtn=(t,cls="")=>`<button class="spk ${cls}" data-say="${esc(t)}" aria-label="ouvir">🔊</button>`;
+const slowBtn=t=>`<button class="spk slow" data-say="${esc(t)}" data-slow="1" aria-label="devagar">🐢</button>`;
+document.addEventListener("click",e=>{const b=e.target.closest("[data-say]"); if(b){say(b.dataset.say,!!b.dataset.slow);}});
+
+/* ===================== GERADOR DE EXERCÍCIOS ===================== */
+// tipos: card, choosePT, chooseES, listenChoose, pairs, tiles, listenTiles, gap, read, speak, type
+function allLearn(){return UNITS.flatMap(u=>u.learn);}
+function distract(item,field,pool,n=3){
+  const others=pool.filter(x=>x[field]!==item[field]);
+  return pick(others,n).map(x=>x[field]);
+}
+function tileBank(es,unit){
+  const w=words(es);
+  const pool=[...new Set(unit.frases.flatMap(f=>words(f.es)).concat(unit.learn.flatMap(l=>words(l.es))))]
+    .filter(x=>!w.map(y=>y.toLowerCase()).includes(x.toLowerCase()));
+  return shuf(w.concat(pick(pool,Math.min(3,Math.max(2,6-w.length)))));
+}
+function buildLesson(unit,level){
+  const L=unit.learn, F=unit.frases, ex=[];
+  if(level===1){
+    ex.push({t:"intro",unit});
+    L.forEach((it,i)=>{
+      ex.push({t:"card",it});
+      if(i%2===1){ // a cada 2 cartões, pratica os 2
+        const two=[L[i-1],L[i]];
+        two.forEach(x=>ex.push(Math.random()<.5?{t:"choosePT",it:x,pool:L}:{t:"listenChoose",it:x,pool:L}));
+      }
+    });
+    if(L.length%2===1) ex.push({t:"choosePT",it:L[L.length-1],pool:L});
+    ex.push({t:"pairs",items:pick(L,4)});
+    pick(L,3).forEach(x=>ex.push({t:"chooseES",it:x,pool:L}));
+    ex.push({t:"pairs",items:pick(L,4)});
+  } else if(level===2){
+    // revisa as palavras e entra nas frases (sempre com palavras já vistas)
+    ex.push({t:"pairs",items:pick(L,4)});
+    F.forEach((f,i)=>{
+      ex.push({t:"cardF",f});
+      ex.push(i%2? {t:"tiles",f,unit}:{t:"chooseF",f,pool:F});
+    });
+    pick(F,2).forEach(f=>ex.push({t:"gap",f,unit}));
+    pick(F,2).forEach(f=>ex.push({t:"listenChooseF",f,pool:F}));
+    if(unit.dialogo) ex.push({t:"read",d:unit.dialogo});
+    pick(F,2).forEach(f=>ex.push({t:"speak",f}));
+  } else {
+    pick(F,2).forEach(f=>ex.push({t:"listenTiles",f,unit}));
+    pick(F,2).forEach(f=>ex.push({t:"tiles",f,unit}));
+    pick(F,2).forEach(f=>ex.push({t:"tilesPT",f,unit}));
+    pick(F,2).forEach(f=>ex.push({t:"gap",f,unit}));
+    pick(F,2).forEach(f=>ex.push({t:"speak",f}));
+    pick(F,2).forEach(f=>ex.push({t:"type",f}));
+    if(unit.dialogo) ex.push({t:"read",d:unit.dialogo});
+  }
+  return ex;
+}
+function buildReview(){
+  const errs=Object.values(S.errors).sort((a,b)=>b.n-a.n).slice(0,8);
+  const ex=[];
+  errs.forEach(e=>{
+    const unit=UNITS.find(u=>u.id===e.u)||UNITS[0];
+    if(e.kind==="f"){const f=unit.frases.find(x=>x.es===e.es); if(!f)return;
+      ex.push({t:"cardF",f}); ex.push({t:"tiles",f,unit}); ex.push(Math.random()<.5?{t:"listenTiles",f,unit}:{t:"type",f});}
+    else{const it=unit.learn.find(x=>x.es===e.es); if(!it)return;
+      ex.push({t:"card",it}); ex.push({t:"chooseES",it,pool:unit.learn}); ex.push({t:"listenChoose",it,pool:unit.learn});}
+  });
+  return ex;
+}
+
+/* ===================== TELAS ===================== */
+let view="home", L=null;
+function unitState(i){
+  const u=UNITS[i], d=S.done[u.id]||[];
+  const prevDone=i===0||(S.done[UNITS[i-1].id]||[]).includes(3)||(S.done[UNITS[i-1].id]||[]).includes(2);
+  return {u,d,open:prevDone};
+}
+function home(){
+  view="home";
+  const nErr=Object.keys(S.errors).length;
+  const t=today(); const streakOk=S.lastDay===t;
+  let h=`<div class="top"><span>🇵🇾 Espanhol</span><span class="sp"></span>
+    <span class="pill">🔥 ${S.streak}${streakOk?"":" <small>(faz uma hoje)</small>"}</span><span class="pill">⭐ ${S.xp}</span></div>
+    <h1>Tua trilha</h1><p class="sub">Primeiro tu aprende, depois pratica. Nível 1 ensina, 2 monta frases, 3 é o desafio.</p>`;
+  if(nErr) h+=`<button class="rev" id="rev">🔁 Revisar o que tu errou (${nErr})<small>As palavras e frases que te pegaram voltam até fixar.</small></button>`;
+  UNITS.forEach((u,i)=>{
+    const st=unitState(i);
+    const names=["1 · Aprender","2 · Frases","3 · Desafio"];
+    let next=[1,2,3].find(l=>!st.d.includes(l));
+    h+=`<div class="unit ${st.open?"":"locked"}"><h2>${i+1}. ${esc(u.title)}</h2><p>${esc(u.desc)}${st.open?"":" · 🔒 termina a anterior (nível 2) pra abrir"}</p><div class="lv">`;
+    [1,2,3].forEach(l=>{
+      const done=st.d.includes(l), can=st.open&&(l===1||st.d.includes(l-1)||done);
+      h+=`<button class="lvb ${done?"done":(can&&l===next?"next":"")}" ${can?"":"disabled"} data-u="${i}" data-l="${l}">${done?"✓ ":""}${names[l-1]}</button>`;
+    });
+    h+=`</div></div>`;
+  });
+  h+=`<p class="note">Dica: aperta 🔊 sempre e repete em voz alta. 🐢 fala devagar.</p>`;
+  $("#app").innerHTML=h;
+  document.querySelectorAll(".lvb").forEach(b=>b.onclick=()=>start(+b.dataset.u,+b.dataset.l));
+  const r=$("#rev"); if(r) r.onclick=()=>start(-1,0);
+}
+function start(ui,level){
+  const unit=ui>=0?UNITS[ui]:null;
+  const ex=ui>=0?buildLesson(unit,level):buildReview();
+  if(!ex.length){home();return;}
+  L={ui,level,unit,ex,i:0,hearts:5,mist:0,graded:0,retry:[]};
+  view="lesson"; render();
+}
+function progress(){const total=L.ex.length;return Math.round(L.i/total*100);}
+function render(){
+  if(L.i>=L.ex.length){finish();return;}
+  const e=L.ex[L.i];
+  $("#app").innerHTML=`<div class="lhead"><button class="x" id="quit">✕</button><div class="bar"><i style="width:${progress()}%"></i></div><span class="hearts">❤ ${L.hearts}</span></div>
+    <div class="body" id="body"></div><div class="foot" id="foot"></div>`;
+  $("#quit").onclick=()=>{ if(confirmQuit()) home(); };
+  EX[e.t](e);
+}
+let quitArm=0;
+function confirmQuit(){ // sem confirm() no sandbox: 2 toques
+  if(Date.now()-quitArm<2500) return true;
+  quitArm=Date.now(); const q=$("#quit"); q.textContent="sair?"; q.style.fontSize="15px";
+  setTimeout(()=>{if(q){q.textContent="✕";q.style.fontSize="";}},2500); return false;
+}
+function footCheck(enabled,onCheck,label="VERIFICAR"){
+  $("#foot").className="foot";
+  $("#foot").innerHTML=`<button class="go" id="chk" ${enabled?"":"disabled"}>${label}</button>`;
+  $("#chk").onclick=onCheck;
+}
+function enable(on=true){const b=$("#chk"); if(b) b.disabled=!on;}
+function footNext(label="CONTINUAR"){
+  $("#foot").className="foot";
+  $("#foot").innerHTML=`<button class="go" id="chk">${label}</button>`;
+  $("#chk").onclick=next;
+}
+function next(){L.i++;render();}
+// registra resultado: ok, resposta certa, explicação, item p/ revisão
+function grade(ok,correct,why,errItem){
+  L.graded++;
+  const e=L.ex[L.i];
+  if(!ok){
+    L.mist++; L.hearts--;
+    if(errItem){const k=errItem.es; const prev=S.errors[k]; S.errors[k]={es:k,kind:errItem.kind,u:errItem.u,n:(prev?prev.n:0)+1};}
+    // repete o exercício no fim da lição (uma vez)
+    if(!e._re){L.ex.push(Object.assign({},e,{_re:true}));}
+  } else if(errItem&&S.errors[errItem.es]&&L.ui===-1){ // acertou na revisão: diminui
+    const r=S.errors[errItem.es]; r.n--; if(r.n<=0) delete S.errors[errItem.es];
+  }
+  const f=$("#foot"); f.className="foot "+(ok?"ok":"bad");
+  const praise=["Boa!","Isso aí!","Mandou bem!","Certinho!","Perfeito!"];
+  f.innerHTML=`<div class="fb"><strong>${ok?praise[Math.random()*praise.length|0]:"Quase…"}</strong>
+    ${ok?(correct?`<span>${esc(correct)}</span>`:""):`Resposta certa: <b>${esc(correct)}</b>`}
+    ${why?`<div class="why">💡 ${esc(why)}</div>`:""}</div>
+    <button class="go" id="chk">CONTINUAR</button>`;
+  $("#chk").onclick=()=>{ if(L.hearts<=0){outOfHearts();return;} next(); };
+  document.querySelectorAll("#body button:not([data-say])").forEach(b=>b.disabled=true);
+  const st=e.it?e.it.es:(e.f?e.f.es:null); if(ok&&st&&!e.noSay) say(st);
+}
+function uId(){return L.unit?L.unit.id:"u1";}
+function unitOfItem(it){const u=UNITS.find(u=>u.learn.includes(it)||u.frases.includes(it));return u?u.id:uId();}
+
+/* ===================== EXERCÍCIOS ===================== */
+const EX={
+intro(e){
+  $("#body").innerHTML=`<div class="kind">Antes de começar</div><div class="intro">${e.unit.intro}</div>`;
+  footNext("BORA");
+},
+card(e){
+  const it=e.it;
+  $("#body").innerHTML=`<div class="kind">Palavra nova</div><div class="learn">
+    <div class="bigspk">${spkBtn(it.es)}${slowBtn(it.es)}</div>
+    <div class="es">${esc(it.es)}</div><div class="pt">${esc(it.pt)}</div>
+    ${it.pr?`<div class="pr">fala tipo: <b>${esc(it.pr)}</b></div>`:""}
+    ${it.tip?`<div class="tip">💡 ${esc(it.tip)}</div>`:""}</div>
+    <p class="sub" style="margin:14px 0 0;text-align:center">Escuta e repete em voz alta 2x.</p>`;
+  setTimeout(()=>say(it.es),250);
+  footNext("ENTENDI");
+},
+cardF(e){
+  const f=e.f;
+  $("#body").innerHTML=`<div class="kind">Frase nova</div><div class="learn">
+    <div class="bigspk">${spkBtn(f.es)}${slowBtn(f.es)}</div>
+    <div class="es" style="font-size:25px">${esc(f.es)}</div><div class="pt">${esc(f.pt)}</div>
+    ${f.why?`<div class="tip">💡 ${esc(f.why)}</div>`:""}</div>
+    <p class="sub" style="margin:14px 0 0;text-align:center">Escuta, repete e presta atenção na ordem das palavras.</p>`;
+  setTimeout(()=>say(f.es),250);
+  footNext("ENTENDI");
+},
+choosePT(e){ // vê/ouve em espanhol, escolhe o significado
+  const it=e.it, opts=shuf([it.pt,...distract(it,"pt",e.pool.length>4?e.pool:allLearn())]);
+  choice(`O que quer dizer?`,`<div class="prompt">${spkBtn(it.es,"small")}<b>${esc(it.es)}</b></div>`,opts,it.pt,
+    {es:it.es,kind:"w",u:unitOfItem(it)},`${it.es} = ${it.pt}`);
+  setTimeout(()=>say(it.es),250);
+},
+chooseES(e){
+  const it=e.it, opts=shuf([it.es,...distract(it,"es",e.pool.length>4?e.pool:allLearn())]);
+  choice(`Como se diz "${esc(it.pt)}"?`,"",opts,it.es,{es:it.es,kind:"w",u:unitOfItem(it)},null,true);
+},
+listenChoose(e){
+  const it=e.it, opts=shuf([it.es,...distract(it,"es",e.pool.length>4?e.pool:allLearn())]);
+  choice(`O que tu ouviu?`,`<div class="bigspk">${spkBtn(it.es)}${slowBtn(it.es)}</div>`,opts,it.es,{es:it.es,kind:"w",u:unitOfItem(it)},`${it.es} = ${it.pt}`,true);
+  setTimeout(()=>say(it.es),300);
+},
+chooseF(e){
+  const f=e.f, opts=shuf([f.pt,...pick(e.pool.filter(x=>x!==f),2).map(x=>x.pt)]);
+  choice(`O que quer dizer?`,`<div class="prompt">${spkBtn(f.es,"small")}<b>${esc(f.es)}</b></div>`,opts,f.pt,{es:f.es,kind:"f",u:unitOfItem(f)},null);
+  setTimeout(()=>say(f.es),250);
+},
+listenChooseF(e){
+  const f=e.f, opts=shuf([f.es,...pick(e.pool.filter(x=>x!==f),2).map(x=>x.es)]);
+  choice(`O que tu ouviu?`,`<div class="bigspk">${spkBtn(f.es)}${slowBtn(f.es)}</div>`,opts,f.es,{es:f.es,kind:"f",u:unitOfItem(f)},null,true);
+  setTimeout(()=>say(f.es),300);
+},
+pairs(e){
+  const its=e.items; let left=shuf(its), right=shuf(its), selL=null, selR=null, ok=0, miss=false;
+  $("#body").innerHTML=`<div class="kind">Ligar os pares</div><p class="q">Toca no par: espanhol ↔ português</p><div class="pairs" id="pp"></div>`;
+  const pp=$("#pp");
+  left.forEach((it,i)=>{
+    pp.insertAdjacentHTML("beforeend",`<button class="opt" data-side="l" data-k="${esc(it.es)}">${esc(it.es)}</button><button class="opt" data-side="r" data-k="${esc(it.es)}">${esc(right[i].pt)}</button>`);
+  });
+  // corrige: o botão da direita precisa da chave do próprio item
+  const rbtns=[...pp.querySelectorAll('[data-side="r"]')]; rbtns.forEach((b,i)=>b.dataset.k=right[i].es);
+  pp.onclick=ev=>{
+    const b=ev.target.closest(".opt"); if(!b||b.classList.contains("gone"))return;
+    const side=b.dataset.side;
+    pp.querySelectorAll(`[data-side="${side}"]`).forEach(x=>x.classList.remove("sel"));
+    b.classList.add("sel"); if(side==="l"){selL=b; say(b.dataset.k);} else selR=b;
+    if(selL&&selR){
+      if(selL.dataset.k===selR.dataset.k){
+        [selL,selR].forEach(x=>{x.classList.add("right");setTimeout(()=>x.classList.add("gone"),250);});
+        ok++; if(ok===its.length){ setTimeout(()=>{ grade(!miss,null,miss?"Errou um par no caminho; ele volta no fim.":null); },300);}
+      } else {
+        miss=true; const a=selL,c=selR; [a,c].forEach(x=>x.classList.add("wrong"));
+        const it=its.find(x=>x.es===a.dataset.k); if(it){const k=it.es;S.errors[k]={es:k,kind:"w",u:unitOfItem(it),n:((S.errors[k]||{}).n||0)+1};}
+        setTimeout(()=>[a,c].forEach(x=>x.classList.remove("wrong","sel")),500);
+      }
+      selL=selR=null;
+    }
+  };
+  $("#foot").innerHTML="";
+},
+tiles(e){ // PT -> monta em ES
+  const f=e.f; tileEx(`Monta em espanhol`,`<div class="prompt"><b>${esc(f.pt)}</b></div>`,tileBank(f.es,e.unit),f.es,f.why,{es:f.es,kind:"f",u:e.unit.id});
+},
+listenTiles(e){
+  const f=e.f; tileEx(`Monta o que tu ouviu`,`<div class="bigspk">${spkBtn(f.es)}${slowBtn(f.es)}</div>`,tileBank(f.es,e.unit),f.es,f.why,{es:f.es,kind:"f",u:e.unit.id});
+  setTimeout(()=>say(f.es),300);
+},
+tilesPT(e){ // ES -> monta em PT
+  const f=e.f, w=words(f.pt);
+  const pool=[...new Set(e.unit.frases.flatMap(x=>words(x.pt)))].filter(x=>!w.map(y=>y.toLowerCase()).includes(x.toLowerCase()));
+  tileEx(`Traduz pro português`,`<div class="prompt">${spkBtn(f.es,"small")}<b>${esc(f.es)}</b></div>`,shuf(w.concat(pick(pool,3))),f.pt,null,{es:f.es,kind:"f",u:e.unit.id},true);
+},
+gap(e){ // completa a lacuna escolhendo a palavra
+  const f=e.f, w=words(f.es);
+  const cand=w.map((x,i)=>({x,i})).filter(o=>o.x.length>2); const tgt=cand.length?cand[Math.random()*cand.length|0]:{x:w[0],i:0};
+  const shown=f.es.split(/(\s+)/); let wi=-1; const parts=shown.map(s=>{ if(/\s+/.test(s))return s; wi++; return wi===tgt.i? s.replace(tgt.x,"____"):s; }).join("");
+  const pool=[...new Set(e.unit.frases.flatMap(x=>words(x.es)).concat(e.unit.learn.flatMap(l=>words(l.es))))].filter(x=>x.toLowerCase()!==tgt.x.toLowerCase()&&x.length>1);
+  const opts=shuf([tgt.x,...pick(pool,2)]);
+  choice(`Completa a frase`,`<div class="prompt" style="flex-direction:column;align-items:flex-start;gap:4px"><b>${esc(parts)}</b><span style="color:var(--muted);font-size:16px">${esc(f.pt)}</span></div>`,opts,tgt.x,{es:f.es,kind:"f",u:e.unit.id},f.es,false,f.why);
+},
+read(e){
+  const d=e.d, opts=shuf([d.certo,...d.erradas]);
+  const dl=`<div class="dlg">${d.linhas.map(([who,t])=>`<div><b>${who}</b>${spkBtn(t,"small")}<span>${esc(t)}</span></div>`).join("")}</div>`;
+  e.noSay=true;
+  choice(`Lê a conversa e responde`,dl+`<p class="q" style="font-size:18px">${esc(d.perg)}</p>`,opts,d.certo,null,null);
+},
+speak(e){
+  const f=e.f; e.noSay=true;
+  const target=words(f.es);
+  $("#body").innerHTML=`<div class="kind">Fala em voz alta</div><p class="q">Escuta e fala a frase</p>
+    <div class="prompt">${spkBtn(f.es,"small")}${slowBtn(f.es)}<b id="tgt">${target.map((w,i)=>`<span data-w="${i}">${esc(w)}</span>`).join(" ")}</b></div>
+    <p class="sub" style="margin:-6px 0 16px">${esc(f.pt)}</p>
+    <button class="mic" id="mic">🎤 Toca e fala</button><div class="heard" id="heard"></div>`;
+  setTimeout(()=>say(f.es),250);
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  // Sem microfone: vira treino (não vale vida nem XP, não finge que conferiu)
+  const treino=msg=>{
+    $("#mic").style.display="none";
+    $("#heard").innerHTML=msg||"";
+    $("#foot").className="foot";
+    $("#foot").innerHTML=`<div class="fb" style="font-size:15px">🔁 Treino: escuta e repete em voz alta 2x junto com o áudio. (Aqui não dá pra conferir.)</div><button class="go" id="chk">CONTINUAR</button>`;
+    $("#chk").onclick=next;
+  };
+  if(!SR||MIC==="blocked"){ treino(MIC==="blocked"?"🎙️ O microfone não funciona nesta página.":"🎙️ Este navegador não reconhece fala."); return; }
+  let tries=0, rec=null, best=null;
+  const mark=heard=>{ // pinta cada palavra: verde = falou, vermelho = faltou
+    const h=words(heard).map(w=>noAcc(w.toLowerCase()));
+    let hit=0; target.forEach((w,i)=>{const ok=h.includes(noAcc(w.toLowerCase())); if(ok)hit++;
+      const s=document.querySelector(`#tgt [data-w="${i}"]`); if(s) s.style.color=ok?"var(--ok)":"var(--bad)";});
+    return hit/target.length;
+  };
+  $("#mic").onclick=()=>{
+    if(rec){try{rec.stop();}catch(_){} return;}
+    beep(660);
+    try{
+      rec=new SR(); rec.lang="es-AR"; rec.interimResults=true; rec.maxAlternatives=3; rec.continuous=false;
+      $("#mic").classList.add("on"); $("#mic").textContent="🔴 Ouvindo… fala agora (toca pra parar)";
+      $("#heard").textContent="";
+      let finalAlts=null;
+      rec.onresult=ev=>{
+        const r=ev.results[ev.results.length-1];
+        $("#heard").textContent=`"${r[0].transcript}"`;
+        if(r.isFinal) finalAlts=[...r].map(a=>a.transcript);
+      };
+      rec.onerror=ev=>{
+        if(ev.error==="not-allowed"||ev.error==="service-not-allowed"||ev.error==="audio-capture"){ MIC="blocked"; rec=null; treino("🎙️ O microfone não liberou nesta página."); }
+        else if(ev.error==="no-speech"){ $("#heard").textContent="Não ouvi nada. Toca e fala mais perto do celular."; }
+        else $("#heard").textContent="Deu erro ("+ev.error+"). Tenta de novo.";
+      };
+      rec.onend=()=>{
+        rec=null; const m=$("#mic"); if(m){m.classList.remove("on"); m.textContent="🎤 Toca e fala";}
+        if(!finalAlts||MIC==="blocked") return;
+        MIC="ok"; tries++;
+        let sc=0, used=finalAlts[0]; finalAlts.forEach(a=>{const s=Math.max(mark(a),sim(a,f.es)*0.9); if(s>sc){sc=s;used=a;}});
+        mark(used); $("#heard").textContent=`Ouvi: "${used}"`;
+        if(sc>=0.8){ beep(880,.12); grade(true,f.es,null,{es:f.es,kind:"f",u:unitOfItem(f)}); }
+        else if(tries>=3){ grade(false,f.es,"As palavras em vermelho não saíram. Aperta 🐢 e copia o ritmo.",{es:f.es,kind:"f",u:unitOfItem(f)}); }
+        else { beep(220,.15); $("#heard").textContent+=` — quase! As vermelhas faltaram. Tenta de novo (${tries}/3)`; }
+      };
+      rec.start();
+    }catch(err){ MIC="blocked"; rec=null; treino("🎙️ O microfone não liberou nesta página."); }
+  };
+  $("#foot").className="foot";
+  $("#foot").innerHTML=`<button class="go ghost" id="skip">NÃO DÁ PRA FALAR AGORA</button>`;
+  $("#skip").onclick=()=>{ if(rec){try{rec.abort();}catch(_){}} next(); };
+},
+type(e){
+  const f=e.f;
+  $("#body").innerHTML=`<div class="kind">Escreve em espanhol</div><div class="prompt"><b>${esc(f.pt)}</b></div>
+    <textarea id="ta" placeholder="Escreve aqui…" autocapitalize="sentences"></textarea>
+    <p class="sub" style="margin:8px 0 0">Acento e ¿? não contam como erro (mas eu te mostro).</p>`;
+  footCheck(false,()=>{
+    const v=$("#ta").value; const a=clean(v), b=clean(f.es);
+    const it={es:f.es,kind:"f",u:unitOfItem(f)};
+    if(a===b) grade(true,f.es,null,it);
+    else if(noAcc(a)===noAcc(b)) grade(true,f.es,"Certo! Só olha os acentos da versão certa.",it);
+    else grade(false,f.es,f.why,it);
+  });
+  $("#ta").oninput=()=>enable($("#ta").value.trim().length>0);
+},
+};
+function choice(q,extra,opts,correct,errItem,show,sayOpts,why){
+  $("#body").innerHTML=`<div class="kind">${q.includes("ouviu")?"Escuta":"Escolhe"}</div><p class="q">${q}</p>${extra}<div class="opts" id="opts">${
+    opts.map(o=>`<button class="opt" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>`;
+  let sel=null;
+  $("#opts").onclick=ev=>{const b=ev.target.closest(".opt");if(!b||b.disabled)return;
+    document.querySelectorAll("#opts .opt").forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); sel=b.dataset.v;
+    if(sayOpts) say(sel); enable(true);};
+  footCheck(false,()=>{
+    const ok=sel===correct;
+    document.querySelectorAll("#opts .opt").forEach(x=>{ if(x.dataset.v===correct)x.classList.add("right"); else if(x.dataset.v===sel)x.classList.add("wrong"); });
+    grade(ok, show||correct, ok?null:(why||null), errItem);
+  });
+}
+function tileEx(q,extra,bank,correct,why,errItem,toPT){
+  $("#body").innerHTML=`<div class="kind">${q.includes("ouviu")?"Escuta e monta":"Monta a frase"}</div><p class="q">${q}</p>${extra}
+    <div class="answer" id="ans"></div><div class="bank" id="bank">${bank.map((w,i)=>`<button class="tl" data-i="${i}">${esc(w)}</button>`).join("")}</div>`;
+  const ans=[];
+  const draw=()=>{ $("#ans").innerHTML=ans.map((i,k)=>`<button class="tl" data-k="${k}">${esc(bank[i])}</button>`).join("");
+    document.querySelectorAll("#bank .tl").forEach(b=>b.classList.toggle("used",ans.includes(+b.dataset.i))); enable(ans.length>0); };
+  $("#bank").onclick=ev=>{const b=ev.target.closest(".tl");if(!b||b.classList.contains("used")||b.disabled)return; ans.push(+b.dataset.i); if(!toPT) say(bank[+b.dataset.i]); draw();};
+  $("#ans").onclick=ev=>{const b=ev.target.closest(".tl");if(!b||b.disabled)return; ans.splice(+b.dataset.k,1); draw();};
+  footCheck(false,()=>{
+    const got=ans.map(i=>bank[i]).join(" ");
+    const ok=clean(got)===clean(correct);
+    grade(ok,correct,ok?null:why,errItem);
+  });
+}
+function outOfHearts(){
+  save();
+  $("#app").innerHTML=`<div class="end"><div class="big">💔</div><h1>Acabaram as vidas</h1>
+    <p class="sub">Normal no começo. O que tu errou já foi pra revisão. Tenta de novo: a segunda vez é bem mais fácil.</p>
+    <button class="go" id="again">TENTAR DE NOVO</button><p></p><button class="go ghost" id="back">VOLTAR</button></div>`;
+  $("#again").onclick=()=>start(L.ui,L.level); $("#back").onclick=home;
+}
+function finish(){
+  const xp=10+Math.max(0,L.graded-L.mist);
+  S.xp+=xp;
+  const t=today();
+  if(S.lastDay!==t){ const y=new Date(Date.now()-864e5); const ys=y.getFullYear()+"-"+String(y.getMonth()+1).padStart(2,"0")+"-"+String(y.getDate()).padStart(2,"0");
+    S.streak=(S.lastDay===ys)?S.streak+1:1; S.lastDay=t; }
+  if(L.ui>=0){ const id=L.unit.id; S.done[id]=S.done[id]||[]; if(!S.done[id].includes(L.level)) S.done[id].push(L.level); }
+  const acc=L.graded?Math.round((L.graded-L.mist)/L.graded*100):100;
+  S.hist.push({d:t,u:L.ui>=0?L.unit.id:"rev",l:L.level,acc,err:L.mist}); if(S.hist.length>200) S.hist=S.hist.slice(-200);
+  save();
+  $("#app").innerHTML=`<div class="end"><div class="big">🎉</div><h1>Lição completa!</h1>
+    <div class="stats"><div>+${xp}<small>XP</small></div><div>${acc}%<small>acertos</small></div><div>🔥 ${S.streak}<small>dias</small></div></div>
+    <p class="sub">${acc>=90?"Mandou muito. Bora pra próxima.":acc>=70?"Bom! O que errou vai aparecer na revisão.":"Tá aprendendo, é isso mesmo. Faz a revisão depois."}</p>
+    <button class="go" id="back">CONTINUAR</button></div>`;
+  $("#back").onclick=home;
+}
+home();
+if("serviceWorker" in navigator && location.protocol==="https:" && !location.hostname.endsWith("claude.ai")){try{navigator.serviceWorker.register("sw.js").catch(()=>{});}catch(e){}}
+</script>
+</body>
+</html>
