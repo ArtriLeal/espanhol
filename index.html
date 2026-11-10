@@ -96,6 +96,24 @@ textarea{width:100%;min-height:96px;border:2px solid var(--line);border-radius:1
 .stats div{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 16px;font-weight:800}
 .stats small{display:block;font-weight:400;color:var(--muted)}
 .note{margin:6px 16px 24px;color:var(--muted);font-size:13px;text-align:center}
+/* movimento leve (sem pesar) */
+@keyframes inR{from{opacity:0;transform:translateX(22px)}to{opacity:1;transform:none}}
+@keyframes up{from{transform:translateY(60%);opacity:.4}to{transform:none;opacity:1}}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+@keyframes pop{0%{transform:scale(.5);opacity:0}70%{transform:scale(1.12);opacity:1}100%{transform:scale(1)}}
+@keyframes beat{0%,100%{transform:scale(1)}40%{transform:scale(1.35)}}
+.body{animation:inR .2s ease-out}
+.foot.ok,.foot.bad{animation:up .18s ease-out}
+.shake{animation:shake .32s}
+.hearts.hit{display:inline-block;animation:beat .4s}
+.go,.opt,.tl,.lvb,.spk,.mic,.rev{transition:transform .06s}
+.go:active:not(:disabled),.opt:active,.tl:active,.lvb:active:not(:disabled),.spk:active,.mic:active,.rev:active{transform:translateY(2px)}
+.opt.right{animation:pop .25s}
+.end .big{animation:pop .5s}
+.stats div{animation:pop .4s backwards}.stats div:nth-child(2){animation-delay:.12s}.stats div:nth-child(3){animation-delay:.24s}
+.combo{display:inline-block;margin-left:6px;font-size:15px;color:var(--gold);animation:pop .3s}
+.sbtn{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:4px 10px;font-size:15px}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:9}
 </style>
 </head>
 <body>
@@ -310,6 +328,30 @@ function pickVoice(){
 }
 if("speechSynthesis" in window){pickVoice(); speechSynthesis.onvoiceschanged=pickVoice;}
 let PLAYER=null, LAST_TTS=null, MIC="unknown", ACTX=null;
+let SOUND=true; try{SOUND=localStorage.getItem("esp_sound")!=="0";}catch(e){}
+function tone(f,t0,d,type,vol){
+  if(!SOUND)return;
+  try{ ACTX=ACTX||new (window.AudioContext||window.webkitAudioContext)(); if(ACTX.state==="suspended")ACTX.resume();
+    const t=ACTX.currentTime+t0, o=ACTX.createOscillator(), g=ACTX.createGain();
+    o.type=type||"sine"; o.frequency.value=f;
+    g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol||.15,t+.015); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g); g.connect(ACTX.destination); o.start(t); o.stop(t+d+.02);
+  }catch(e){}
+}
+const SFX={ // poucos sons, curtos e baixos
+  tap(){tone(560,0,.045,"triangle",.06);},
+  ok(){tone(660,0,.12,"sine",.16);tone(990,.09,.2,"sine",.14);},
+  bad(){tone(240,0,.15,"triangle",.13);tone(185,.11,.22,"triangle",.11);try{navigator.vibrate&&navigator.vibrate(60);}catch(e){}},
+  done(){[523,659,784,1047].forEach((f,i)=>tone(f,i*.1,.25,"sine",.14));tone(1319,.42,.4,"sine",.1);},
+};
+function confetti(){
+  try{const c=document.createElement("canvas");c.id="confetti";document.body.appendChild(c);
+    const W=c.width=innerWidth,H=c.height=innerHeight,x=c.getContext("2d"),cols=["#0f8b7d","#f2a516","#2f9e44","#d9480f","#4dabf7"];
+    const P=Array.from({length:70},()=>({x:W/2+(Math.random()-.5)*80,y:H*.35,vx:(Math.random()-.5)*9,vy:-Math.random()*9-3,r:Math.random()*6+4,c:cols[Math.random()*5|0],a:Math.random()*6}));
+    let n=0;(function f(){x.clearRect(0,0,W,H);P.forEach(p=>{p.vy+=.28;p.x+=p.vx;p.y+=p.vy;p.a+=.2;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.c;x.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);x.restore();});
+      if(++n<90)requestAnimationFrame(f);else c.remove();})();
+  }catch(e){}
+}
 function beep(freq,dur){ // "plim" de microfone, igual app de idioma
   try{ ACTX=ACTX||new (window.AudioContext||window.webkitAudioContext)();
     const o=ACTX.createOscillator(), g=ACTX.createGain(); o.frequency.value=freq||660; o.type="sine";
@@ -351,7 +393,8 @@ function sim(a,b){a=noAcc(clean(a));b=noAcc(clean(b));const m=a.length,n=b.lengt
   return 1-d[m][n]/Math.max(m,n);}
 const spkBtn=(t,cls="")=>`<button class="spk ${cls}" data-say="${esc(t)}" aria-label="ouvir">🔊</button>`;
 const slowBtn=t=>`<button class="spk slow" data-say="${esc(t)}" data-slow="1" aria-label="devagar">🐢</button>`;
-document.addEventListener("click",e=>{const b=e.target.closest("[data-say]"); if(b){say(b.dataset.say,!!b.dataset.slow);}});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-say]"); if(b){say(b.dataset.say,!!b.dataset.slow);return;}
+  const t=e.target.closest(".opt,.tl,.lvb,.rev"); if(t&&!t.disabled) SFX.tap();});
 
 /* ===================== GERADOR DE EXERCÍCIOS ===================== */
 // tipos: card, choosePT, chooseES, listenChoose, pairs, tiles, listenTiles, gap, read, speak, type
@@ -428,7 +471,7 @@ function home(){
   const nErr=Object.keys(S.errors).length;
   const t=today(); const streakOk=S.lastDay===t;
   let h=`<div class="top"><span>🇵🇾 Espanhol</span><span class="sp"></span>
-    <span class="pill">🔥 ${S.streak}${streakOk?"":" <small>(faz uma hoje)</small>"}</span><span class="pill">⭐ ${S.xp}</span></div>
+    <span class="pill">🔥 ${S.streak}${streakOk?"":" <small>(faz uma hoje)</small>"}</span><span class="pill">⭐ ${S.xp}</span><button class="sbtn" id="snd">${SOUND?"🔔":"🔕"}</button></div>
     <h1>Tua trilha</h1><p class="sub">Primeiro tu aprende, depois pratica. Nível 1 ensina, 2 monta frases, 3 é o desafio.</p>`;
   if(nErr) h+=`<button class="rev" id="rev">🔁 Revisar o que tu errou (${nErr})<small>As palavras e frases que te pegaram voltam até fixar.</small></button>`;
   UNITS.forEach((u,i)=>{
@@ -446,21 +489,23 @@ function home(){
   $("#app").innerHTML=h;
   document.querySelectorAll(".lvb").forEach(b=>b.onclick=()=>start(+b.dataset.u,+b.dataset.l));
   const r=$("#rev"); if(r) r.onclick=()=>start(-1,0);
+  $("#snd").onclick=()=>{SOUND=!SOUND;try{localStorage.setItem("esp_sound",SOUND?"1":"0");}catch(e){} home(); if(SOUND)SFX.ok();};
 }
 function start(ui,level){
   const unit=ui>=0?UNITS[ui]:null;
   const ex=ui>=0?buildLesson(unit,level):buildReview();
   if(!ex.length){home();return;}
-  L={ui,level,unit,ex,i:0,hearts:5,mist:0,graded:0,retry:[]};
+  L={ui,level,unit,ex,i:0,hearts:5,mist:0,graded:0,retry:[],pp:0,combo:0};
   view="lesson"; render();
 }
 function progress(){const total=L.ex.length;return Math.round(L.i/total*100);}
 function render(){
   if(L.i>=L.ex.length){finish();return;}
   const e=L.ex[L.i];
-  $("#app").innerHTML=`<div class="lhead"><button class="x" id="quit">✕</button><div class="bar"><i style="width:${progress()}%"></i></div><span class="hearts">❤ ${L.hearts}</span></div>
+  $("#app").innerHTML=`<div class="lhead"><button class="x" id="quit">✕</button><div class="bar"><i id="pb" style="width:${L.pp}%"></i></div><span class="hearts">❤ ${L.hearts}</span></div>
     <div class="body" id="body"></div><div class="foot" id="foot"></div>`;
   $("#quit").onclick=()=>{ if(confirmQuit()) home(); };
+  const pc=progress(); requestAnimationFrame(()=>{const b=$("#pb"); if(b)b.style.width=pc+"%";}); L.pp=pc;
   EX[e.t](e);
 }
 let quitArm=0;
@@ -493,15 +538,19 @@ function grade(ok,correct,why,errItem){
   } else if(errItem&&S.errors[errItem.es]&&L.ui===-1){ // acertou na revisão: diminui
     const r=S.errors[errItem.es]; r.n--; if(r.n<=0) delete S.errors[errItem.es];
   }
+  L.combo=ok?(L.combo||0)+1:0;
+  if(ok) SFX.ok(); else { SFX.bad(); const bd=$("#body"); if(bd){bd.classList.remove("shake");void bd.offsetWidth;bd.classList.add("shake");}
+    const h=document.querySelector(".hearts"); if(h){h.textContent="❤ "+L.hearts;h.classList.add("hit");} }
   const f=$("#foot"); f.className="foot "+(ok?"ok":"bad");
   const praise=["Boa!","Isso aí!","Mandou bem!","Certinho!","Perfeito!"];
-  f.innerHTML=`<div class="fb"><strong>${ok?praise[Math.random()*praise.length|0]:"Quase…"}</strong>
+  const combo=ok&&L.combo>=3?`<span class="combo">🔥 ${L.combo} seguidas!</span>`:"";
+  f.innerHTML=`<div class="fb"><strong>${ok?praise[Math.random()*praise.length|0]:"Quase…"}${combo}</strong>
     ${ok?(correct?`<span>${esc(correct)}</span>`:""):`Resposta certa: <b>${esc(correct)}</b>`}
     ${why?`<div class="why">💡 ${esc(why)}</div>`:""}</div>
     <button class="go" id="chk">CONTINUAR</button>`;
   $("#chk").onclick=()=>{ if(L.hearts<=0){outOfHearts();return;} next(); };
   document.querySelectorAll("#body button:not([data-say])").forEach(b=>b.disabled=true);
-  const st=e.it?e.it.es:(e.f?e.f.es:null); if(ok&&st&&!e.noSay) say(st);
+  const st=e.it?e.it.es:(e.f?e.f.es:null); if(ok&&st&&!e.noSay) setTimeout(()=>say(st),380);
 }
 function uId(){return L.unit?L.unit.id:"u1";}
 function unitOfItem(it){const u=UNITS.find(u=>u.learn.includes(it)||u.frases.includes(it));return u?u.id:uId();}
@@ -723,19 +772,25 @@ function outOfHearts(){
 }
 function finish(){
   const xp=10+Math.max(0,L.graded-L.mist);
-  S.xp+=xp;
+  S.xp+=xp; S._prevStreak=S.streak;
   const t=today();
   if(S.lastDay!==t){ const y=new Date(Date.now()-864e5); const ys=y.getFullYear()+"-"+String(y.getMonth()+1).padStart(2,"0")+"-"+String(y.getDate()).padStart(2,"0");
     S.streak=(S.lastDay===ys)?S.streak+1:1; S.lastDay=t; }
   if(L.ui>=0){ const id=L.unit.id; S.done[id]=S.done[id]||[]; if(!S.done[id].includes(L.level)) S.done[id].push(L.level); }
   const acc=L.graded?Math.round((L.graded-L.mist)/L.graded*100):100;
+  var streakUp=S._prevStreak!==undefined&&S.streak>S._prevStreak;
   S.hist.push({d:t,u:L.ui>=0?L.unit.id:"rev",l:L.level,acc,err:L.mist}); if(S.hist.length>200) S.hist=S.hist.slice(-200);
   save();
-  $("#app").innerHTML=`<div class="end"><div class="big">🎉</div><h1>Lição completa!</h1>
-    <div class="stats"><div>+${xp}<small>XP</small></div><div>${acc}%<small>acertos</small></div><div>🔥 ${S.streak}<small>dias</small></div></div>
-    <p class="sub">${acc>=90?"Mandou muito. Bora pra próxima.":acc>=70?"Bom! O que errou vai aparecer na revisão.":"Tá aprendendo, é isso mesmo. Faz a revisão depois."}</p>
-    <button class="go" id="back">CONTINUAR</button></div>`;
-  $("#back").onclick=home;
+  delete S._prevStreak;
+  let nx=null; if(L.ui>=0){ nx=L.level<3?[L.ui,L.level+1]:(L.ui+1<UNITS.length?[L.ui+1,1]:null); }
+  const nxName=nx?(nx[1]===1?`Unidade ${nx[0]+1}: ${UNITS[nx[0]].title}`:["","Aprender","Frases","Desafio"][nx[1]]):"";
+  $("#app").innerHTML=`<div class="end"><div class="big">${acc===100?"🏆":"🎉"}</div><h1>${acc===100?"Lição perfeita!":"Lição completa!"}</h1>
+    <div class="stats"><div>+<span id="xpc">0</span><small>XP</small></div><div>${acc}%<small>acertos</small></div><div>🔥 ${S.streak}<small>${streakUp?"dias · +1!":"dias"}</small></div></div>
+    <p class="sub">${acc>=90?"Mandou muito.":acc>=70?"Bom! O que errou vai aparecer na revisão.":"Tá aprendendo, é isso mesmo. Faz a revisão depois."}</p>
+    ${nx?`<button class="go" id="nxt">PRÓXIMA: ${esc(nxName).toUpperCase()}</button><p></p><button class="go ghost" id="back">VOLTAR PRA TRILHA</button>`:`<button class="go" id="back">CONTINUAR</button>`}</div>`;
+  $("#back").onclick=home; if(nx) $("#nxt").onclick=()=>start(nx[0],nx[1]);
+  SFX.done(); confetti();
+  let k=0; const xi=setInterval(()=>{k=Math.min(xp,k+Math.ceil(xp/15)); const el=$("#xpc"); if(el)el.textContent=k; if(k>=xp)clearInterval(xi);},40);
 }
 home();
 if("serviceWorker" in navigator && location.protocol==="https:" && !location.hostname.endsWith("claude.ai")){try{navigator.serviceWorker.register("sw.js").catch(()=>{});}catch(e){}}
