@@ -387,6 +387,35 @@ const pick=(a,n)=>shuf(a).slice(0,n);
 const clean=s=>s.toLowerCase().replace(/[¿?¡!.,…]/g,"").replace(/\s+/g," ").trim();
 const noAcc=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"");
 const words=s=>s.replace(/[¿?¡!.,…]/g,"").split(/\s+/).filter(Boolean);
+/* Números: o reconhecimento de fala devolve "10.000"; a frase tem "diez mil". Converte dígitos pra extenso. */
+const U0=["cero","uno","dos","tres","cuatro","cinco","seis","siete","ocho","nueve","diez","once","doce","trece","catorce","quince","dieciséis","diecisiete","dieciocho","diecinueve","veinte","veintiuno","veintidós","veintitrés","veinticuatro","veinticinco","veintiséis","veintisiete","veintiocho","veintinueve"];
+const T0={3:"treinta",4:"cuarenta",5:"cincuenta",6:"sesenta",7:"setenta",8:"ochenta",9:"noventa"};
+const H0=["","ciento","doscientos","trescientos","cuatrocientos","quinientos","seiscientos","setecientos","ochocientos","novecientos"];
+function numEs(n){
+  if(n<30) return U0[n];
+  if(n<100){const t=Math.floor(n/10),u=n%10;return T0[t]+(u?" y "+U0[u]:"");}
+  if(n<1000){if(n===100)return "cien";const h=Math.floor(n/100),r=n%100;return H0[h]+(r?" "+numEs(r):"");}
+  if(n<1000000){const m=Math.floor(n/1000),r=n%1000;const pre=m===1?"":numEs(m).replace(/uno$/,"un")+" ";return pre+"mil"+(r?" "+numEs(r):"");}
+  return String(n);
+}
+function normNums(s){return s.replace(/\d{1,3}(?:[.,]\d{3})+|\d+/g,m=>{const n=parseInt(m.replace(/[.,]/g,""),10);return isNaN(n)?m:numEs(n);});}
+/* Erro de digitação x erro de verdade (escrever) */
+function osa(a,b){const m=a.length,n=b.length,d=Array.from({length:m+1},(_,i)=>[i]);for(let j=1;j<=n;j++)d[0][j]=j;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++){d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+    if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])d[i][j]=Math.min(d[i][j],d[i-2][j-2]+1);}return d[m][n];}
+let VOCAB=null;
+function vocab(){if(!VOCAB){VOCAB=new Set();UNITS.forEach(u=>{u.learn.concat(u.frases).forEach(x=>words(x.es).forEach(w=>VOCAB.add(noAcc(w.toLowerCase()))));});}return VOCAB;}
+function typos(typed,target){ // devolve lista de [digitou, certo] se só tiver errinho de digitação; senão null
+  const A=words(typed.toLowerCase()),B=words(target.toLowerCase()); if(A.length!==B.length) return null;
+  const out=[];
+  for(let i=0;i<A.length;i++){const a=noAcc(A[i]),b=noAcc(B[i]); if(a===b) continue;
+    if(b.length<4||osa(a,b)>1) return null;               // palavra curta ou erro grande: conta
+    if(vocab().has(a)) return null;                         // virou outra palavra de verdade (está/estás)
+    if(a.slice(0,-1)===b.slice(0,-1)&&/[oa]$/.test(a)&&/[oa]$/.test(b)) return null; // masculino/feminino
+    if(a+"s"===b||b+"s"===a) return null;                   // singular/plural, tú/vos
+    out.push([A[i],B[i]]);}
+  return out.length&&out.length<=2?out:null;
+}
 function sim(a,b){a=noAcc(clean(a));b=noAcc(clean(b));const m=a.length,n=b.length;if(!m||!n)return 0;
   const d=Array.from({length:m+1},(_,i)=>[i]);for(let j=1;j<=n;j++)d[0][j]=j;
   for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
@@ -726,7 +755,7 @@ speak(e){
   if(!SR||MIC==="blocked"){ treino(MIC==="blocked"?"🎙️ O microfone não funciona nesta página.":"🎙️ Este navegador não reconhece fala."); return; }
   let tries=0, rec=null, best=null;
   const mark=heard=>{ // pinta cada palavra: verde = falou, vermelho = faltou
-    const h=words(heard).map(w=>noAcc(w.toLowerCase()));
+    const h=words(normNums(heard)).map(w=>noAcc(w.toLowerCase()));
     let hit=0; target.forEach((w,i)=>{const ok=h.includes(noAcc(w.toLowerCase())); if(ok)hit++;
       const s=document.querySelector(`#tgt [data-w="${i}"]`); if(s) s.style.color=ok?"var(--ok)":"var(--bad)";});
     return hit/target.length;
@@ -753,7 +782,7 @@ speak(e){
         rec=null; const m=$("#mic"); if(m){m.classList.remove("on"); m.textContent="🎤 Toca e fala";}
         if(!finalAlts||MIC==="blocked") return;
         MIC="ok"; tries++;
-        let sc=0, used=finalAlts[0]; finalAlts.forEach(a=>{const s=Math.max(mark(a),sim(a,f.es)*0.9); if(s>sc){sc=s;used=a;}});
+        let sc=0, used=finalAlts[0]; finalAlts.forEach(a=>{const s=Math.max(mark(a),sim(normNums(a),f.es)*0.9); if(s>sc){sc=s;used=a;}});
         mark(used); $("#heard").textContent=`Ouvi: "${used}"`;
         if(sc>=0.8){ beep(880,.12); grade(true,f.es,null,{es:f.es,kind:"f",u:unitOfItem(f)}); }
         else if(tries>=3){ grade(false,f.es,"As palavras em vermelho não saíram. Aperta 🐢 e copia o ritmo.",{es:f.es,kind:"f",u:unitOfItem(f)}); }
@@ -770,12 +799,14 @@ type(e){
   const f=e.f;
   $("#body").innerHTML=`<div class="kind">Escreve em espanhol</div><div class="prompt"><b>${esc(f.pt)}</b></div>
     <textarea id="ta" placeholder="Escreve aqui…" autocapitalize="sentences"></textarea>
-    <p class="sub" style="margin:8px 0 0">Acento e ¿? não contam como erro (mas eu te mostro).</p>`;
+    <p class="sub" style="margin:8px 0 0">Acento, ¿? e letrinha trocada sem querer não contam como erro (mas eu te mostro). Trocar palavra, gênero ou plural conta.</p>`;
   footCheck(false,()=>{
-    const v=$("#ta").value; const a=clean(v), b=clean(f.es);
+    const v=normNums($("#ta").value); const a=clean(v), b=clean(f.es);
     const it={es:f.es,kind:"f",u:unitOfItem(f)};
+    const tp=typos(a,b);
     if(a===b) grade(true,f.es,null,it);
     else if(noAcc(a)===noAcc(b)) grade(true,f.es,"Certo! Só olha os acentos da versão certa.",it);
+    else if(tp) grade(true,f.es,"Certo! Só um errinho de digitação: "+tp.map(([x,y])=>`"${x}" → "${y}"`).join(", "),it);
     else grade(false,f.es,f.why,it);
   });
   $("#ta").oninput=()=>enable($("#ta").value.trim().length>0);
