@@ -367,6 +367,9 @@ function ttsSay(t,slow){
     u.lang=VOICE?VOICE.lang:"es-ES"; if(VOICE)u.voice=VOICE; u.rate=slow?0.6:0.9;
     speechSynthesis.speak(u);}catch(e){}
 }
+let SAYT=null;
+function sayLater(t,ms){clearTimeout(SAYT);SAYT=setTimeout(()=>say(t),ms);}
+function stopAudio(){clearTimeout(SAYT);try{if(PLAYER)PLAYER.pause();}catch(e){}try{speechSynthesis.cancel();}catch(e){}}
 function say(t,slow){ // áudio gravado (voz argentina) embutido; se não tiver, usa a voz do celular
   const k=t.replace(/[¿¡…]/g,"").replace(/\s+/g," ").trim().toLowerCase();
   const b=window.AUDIO&&window.AUDIO[k];
@@ -398,7 +401,7 @@ function numEs(n){
   if(n<1000000){const m=Math.floor(n/1000),r=n%1000;const pre=m===1?"":numEs(m).replace(/uno$/,"un")+" ";return pre+"mil"+(r?" "+numEs(r):"");}
   return String(n);
 }
-function normNums(s){return s.replace(/\d{1,3}(?:[.,]\d{3})+|\d+/g,m=>{const n=parseInt(m.replace(/[.,]/g,""),10);return isNaN(n)?m:numEs(n);});}
+function normNums(s){return s.replace(/\d{1,3}(?:[.,\s  ]\d{3})+|\d+/g,m=>{const n=parseInt(m.replace(/[^\d]/g,""),10);return isNaN(n)?m:numEs(n);});}
 /* Erro de digitação x erro de verdade (escrever) */
 function osa(a,b){const m=a.length,n=b.length,d=Array.from({length:m+1},(_,i)=>[i]);for(let j=1;j<=n;j++)d[0][j]=j;
   for(let i=1;i<=m;i++)for(let j=1;j<=n;j++){d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
@@ -462,6 +465,7 @@ function buildLesson(unit,level){
     });
     pick(F,2).forEach(f=>ex.push({t:"gap",f,unit}));
     pick(F,2).forEach(f=>ex.push({t:"listenChooseF",f,pool:F}));
+    pick(F,1).forEach(f=>ex.push({t:"listenTiles",f,unit}));
     if(unit.dialogo) ex.push({t:"read",d:unit.dialogo});
     pick(F,2).forEach(f=>ex.push({t:"speak",f}));
   } else {
@@ -471,6 +475,7 @@ function buildLesson(unit,level){
     pick(F,2).forEach(f=>ex.push({t:"gap",f,unit}));
     pick(F,2).forEach(f=>ex.push({t:"speak",f}));
     pick(F,2).forEach(f=>ex.push({t:"type",f}));
+    pick(F,2).forEach(f=>ex.push({t:"listenType",f}));
     if(unit.dialogo) ex.push({t:"read",d:unit.dialogo});
   }
   return ex;
@@ -500,7 +505,7 @@ function exFor(es){
   }
   if(b<=1) return r([{t:"chooseF",f:it,pool:unit.frases},{t:"listenChooseF",f:it,pool:unit.frases}]);
   if(b<=3) return r([{t:"tiles",f:it,unit},{t:"listenTiles",f:it,unit},{t:"gap",f:it,unit},{t:"tilesPT",f:it,unit}]);
-  return r([{t:"type",f:it},{t:"speak",f:it},{t:"listenTiles",f:it,unit}]);
+  return r([{t:"type",f:it},{t:"speak",f:it},{t:"listenTiles",f:it,unit},{t:"listenType",f:it}]);
 }
 function buildDaily(){
   let keys=dueList();
@@ -547,7 +552,7 @@ function home(){
     });
     h+=`</div></div>`;
   });
-  h+=`<p class="note">Dica: aperta 🔊 sempre e repete em voz alta. 🐢 fala devagar.</p>
+  h+=`<p class="note">Dica: aperta 🔊 sempre e repete em voz alta. 🐢 fala devagar. · versão 5</p>
     <p class="note"><button class="sbtn" id="exp">📋 Copiar progresso pro Jarvis</button></p><div id="expo"></div>`;
   $("#app").innerHTML=h;
   document.querySelectorAll(".lvb").forEach(b=>b.onclick=()=>start(+b.dataset.u,+b.dataset.l));
@@ -573,6 +578,7 @@ function start(ui,level){
 }
 function progress(){const total=L.ex.length;return Math.round(L.i/total*100);}
 function render(){
+  stopAudio();
   if(L.i>=L.ex.length){finish();return;}
   const e=L.ex[L.i];
   $("#app").innerHTML=`<div class="lhead"><button class="x" id="quit">✕</button><div class="bar"><i id="pb" style="width:${L.pp}%"></i></div><span class="hearts">❤ ${L.hearts}</span></div>
@@ -624,7 +630,7 @@ function grade(ok,correct,why,errItem){
     <button class="go" id="chk">CONTINUAR</button>`;
   $("#chk").onclick=()=>{ if(L.hearts<=0){outOfHearts();return;} next(); };
   document.querySelectorAll("#body button:not([data-say])").forEach(b=>b.disabled=true);
-  const st=e.it?e.it.es:(e.f?e.f.es:null); if(ok&&st&&!e.noSay) setTimeout(()=>say(st),380);
+  const st=e.it?e.it.es:(e.f?e.f.es:null); if(ok&&st&&!e.noSay) sayLater(st,380);
 }
 function uId(){return L.unit?L.unit.id:"u1";}
 function unitOfItem(it){const u=UNITS.find(u=>u.learn.includes(it)||u.frases.includes(it));return u?u.id:uId();}
@@ -643,7 +649,7 @@ card(e){
     ${it.pr?`<div class="pr">fala tipo: <b>${esc(it.pr)}</b></div>`:""}
     ${it.tip?`<div class="tip">💡 ${esc(it.tip)}</div>`:""}</div>
     <p class="sub" style="margin:14px 0 0;text-align:center">Escuta e repete em voz alta 2x.</p>`;
-  setTimeout(()=>say(it.es),250);
+  sayLater(it.es,250);
   footNext("ENTENDI");
 },
 cardF(e){
@@ -653,14 +659,14 @@ cardF(e){
     <div class="es" style="font-size:25px">${esc(f.es)}</div><div class="pt">${esc(f.pt)}</div>
     ${f.why?`<div class="tip">💡 ${esc(f.why)}</div>`:""}</div>
     <p class="sub" style="margin:14px 0 0;text-align:center">Escuta, repete e presta atenção na ordem das palavras.</p>`;
-  setTimeout(()=>say(f.es),250);
+  sayLater(f.es,250);
   footNext("ENTENDI");
 },
 choosePT(e){ // vê/ouve em espanhol, escolhe o significado
   const it=e.it, opts=shuf([it.pt,...distract(it,"pt",e.pool.length>4?e.pool:allLearn())]);
   choice(`O que quer dizer?`,`<div class="prompt">${spkBtn(it.es,"small")}<b>${esc(it.es)}</b></div>`,opts,it.pt,
     {es:it.es,kind:"w",u:unitOfItem(it)},`${it.es} = ${it.pt}`);
-  setTimeout(()=>say(it.es),250);
+  sayLater(it.es,250);
 },
 chooseES(e){
   const it=e.it, opts=shuf([it.es,...distract(it,"es",e.pool.length>4?e.pool:allLearn())]);
@@ -669,17 +675,17 @@ chooseES(e){
 listenChoose(e){
   const it=e.it, opts=shuf([it.es,...distract(it,"es",e.pool.length>4?e.pool:allLearn())]);
   choice(`O que tu ouviu?`,`<div class="bigspk">${spkBtn(it.es)}${slowBtn(it.es)}</div>`,opts,it.es,{es:it.es,kind:"w",u:unitOfItem(it)},`${it.es} = ${it.pt}`,true);
-  setTimeout(()=>say(it.es),300);
+  sayLater(it.es,300);
 },
 chooseF(e){
   const f=e.f, opts=shuf([f.pt,...pick(e.pool.filter(x=>x!==f),2).map(x=>x.pt)]);
   choice(`O que quer dizer?`,`<div class="prompt">${spkBtn(f.es,"small")}<b>${esc(f.es)}</b></div>`,opts,f.pt,{es:f.es,kind:"f",u:unitOfItem(f)},null);
-  setTimeout(()=>say(f.es),250);
+  sayLater(f.es,250);
 },
 listenChooseF(e){
   const f=e.f, opts=shuf([f.es,...pick(e.pool.filter(x=>x!==f),2).map(x=>x.es)]);
   choice(`O que tu ouviu?`,`<div class="bigspk">${spkBtn(f.es)}${slowBtn(f.es)}</div>`,opts,f.es,{es:f.es,kind:"f",u:unitOfItem(f)},null,true);
-  setTimeout(()=>say(f.es),300);
+  sayLater(f.es,300);
 },
 pairs(e){
   const its=e.items; let left=shuf(its), right=shuf(its), selL=null, selR=null, ok=0, miss=false;
@@ -714,7 +720,7 @@ tiles(e){ // PT -> monta em ES
 },
 listenTiles(e){
   const f=e.f; tileEx(`Monta o que tu ouviu`,`<div class="bigspk">${spkBtn(f.es)}${slowBtn(f.es)}</div>`,tileBank(f.es,e.unit),f.es,f.why,{es:f.es,kind:"f",u:e.unit.id});
-  setTimeout(()=>say(f.es),300);
+  sayLater(f.es,300);
 },
 tilesPT(e){ // ES -> monta em PT
   const f=e.f, w=words(f.pt);
@@ -742,7 +748,7 @@ speak(e){
     <div class="prompt">${spkBtn(f.es,"small")}${slowBtn(f.es)}<b id="tgt">${target.map((w,i)=>`<span data-w="${i}">${esc(w)}</span>`).join(" ")}</b></div>
     <p class="sub" style="margin:-6px 0 16px">${esc(f.pt)}</p>
     <button class="mic" id="mic">🎤 Toca e fala</button><div class="heard" id="heard"></div>`;
-  setTimeout(()=>say(f.es),250);
+  sayLater(f.es,250);
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   // Sem microfone: vira treino (não vale vida nem XP, não finge que conferiu)
   const treino=msg=>{
@@ -795,11 +801,13 @@ speak(e){
   $("#foot").innerHTML=`<button class="go ghost" id="skip">NÃO DÁ PRA FALAR AGORA</button>`;
   $("#skip").onclick=()=>{ if(rec){try{rec.abort();}catch(_){}} next(); };
 },
+listenType(e){ e.listen=true; EX.type(e); },
 type(e){
   const f=e.f;
-  $("#body").innerHTML=`<div class="kind">Escreve em espanhol</div><div class="prompt"><b>${esc(f.pt)}</b></div>
+  $("#body").innerHTML=`${e.listen?`<div class="kind">Ditado</div><p class="q">Escuta e escreve em espanhol</p><div class="bigspk">${spkBtn(f.es)}${slowBtn(f.es)}</div>`:`<div class="kind">Escreve em espanhol</div><div class="prompt"><b>${esc(f.pt)}</b></div>`}
     <textarea id="ta" placeholder="Escreve aqui…" autocapitalize="sentences"></textarea>
     <p class="sub" style="margin:8px 0 0">Acento, ¿? e letrinha trocada sem querer não contam como erro (mas eu te mostro). Trocar palavra, gênero ou plural conta.</p>`;
+  if(e.listen) sayLater(f.es,300);
   footCheck(false,()=>{
     const v=normNums($("#ta").value); const a=clean(v), b=clean(f.es);
     const it={es:f.es,kind:"f",u:unitOfItem(f)};
@@ -869,7 +877,7 @@ function finish(){
   let k=0; const xi=setInterval(()=>{k=Math.min(xp,k+Math.ceil(xp/15)); const el=$("#xpc"); if(el)el.textContent=k; if(k>=xp)clearInterval(xi);},40);
 }
 home();
-if("serviceWorker" in navigator && location.protocol==="https:" && !location.hostname.endsWith("claude.ai")){try{navigator.serviceWorker.register("sw.js").catch(()=>{});}catch(e){}}
+if("serviceWorker" in navigator && location.protocol==="https:" && !location.hostname.endsWith("claude.ai")){try{navigator.serviceWorker.register("sw.js").then(r=>{try{r.update();}catch(e){}}).catch(()=>{}); navigator.serviceWorker.addEventListener("controllerchange",()=>{if(!window._rl){window._rl=1;location.reload();}});}catch(e){}}
 </script>
 </body>
 </html>
