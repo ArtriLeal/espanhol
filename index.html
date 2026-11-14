@@ -292,6 +292,118 @@ const UNITS = [
   dialogo:{linhas:[["A","Hola, tengo un paquete para Ana."],["B","Ana no está. Soy el vecino."],["A","¿Dejo el paquete con vos?"],["B","Sí, gracias."]],
     perg:"Com quem fica o pacote?", certo:"Com o vizinho", erradas:["Com a Ana","Volta pra base"]}
 },
+{ id:"u7", title:"Ser e estar", desc:"Sou × estou, a pegadinha do brasileiro",
+  intro:`<h3>Unidade 7 — Ser e estar</h3>Em espanhol os dois existem, igual ao português, mas tem pegadinhas.<ul>
+  <li><b>Ser</b> = o que a pessoa ou a coisa <b>é</b>: origem, profissão, como é. <b>Soy</b> repartidor, <b>es</b> caro.</li>
+  <li><b>Estar</b> = como tá <b>agora</b> e <b>onde</b> tá. <b>Estoy</b> cansado, <b>estoy</b> en casa.</li>
+  <li>Com <b>vos</b>: "vos <b>sos</b>" (tu é) e "vos <b>estás</b>" (tu tá).</li></ul>`,
+  learn:[
+    {es:"soy", pt:"eu sou", pr:"sói"},
+    {es:"sos", pt:"tu é (vos)", pr:"sós", tip:"No Paraguai e na Argentina: vos sos. Em outros países: tú eres."},
+    {es:"es", pt:"ele/ela é", pr:"és"},
+    {es:"estoy", pt:"eu tô", pr:"estói", tip:"Igual ao português: estado e lugar usam ESTAR."},
+    {es:"estás", pt:"tu tá", pr:"estás"},
+    {es:"está", pt:"ele/ela tá", pr:"está"},
+    {es:"cansado", pt:"cansado", pr:"kansádo"},
+    {es:"contento", pt:"contente / feliz", pr:"kontênto"},
+    {es:"enfermo", pt:"doente", pr:"enférmo", tip:"Falso amigo de leve: enfermo = doente. Enfermeiro = enfermero."},
+    {es:"lejos", pt:"longe", pr:"lérros", tip:"J = R forte de garganta."},
+    {es:"cerca", pt:"perto", pr:"sêrka", tip:"Falso amigo! Cerca = perto (não é cerca de arame)."},
+  ],
+  frases:[
+    {es:"Estoy cansado.", pt:"Tô cansado.", why:"Estado de agora = ESTAR."},
+    {es:"¿Dónde estás?", pt:"Onde tu tá?"},
+    {es:"Estoy en casa.", pt:"Tô em casa.", why:"Lugar = ESTAR."},
+    {es:"Soy repartidor.", pt:"Sou entregador.", why:"Profissão = SER."},
+    {es:"¿Vos sos de Paraguay?", pt:"Tu é do Paraguai?", why:"Com vos: SOS."},
+    {es:"Está muy lejos.", pt:"Tá muito longe."},
+    {es:"El mercado está cerca.", pt:"O mercado fica perto.", why:"Cerca = perto."},
+  ],
+  dialogo:{linhas:[["A","Hola, ¿cómo estás?"],["B","Estoy cansado, trabajé mucho."],["A","¿Dónde estás ahora?"],["B","Estoy en casa. El trabajo está lejos."]],
+    perg:"Como a pessoa B tá?", certo:"Cansada", erradas:["Doente","Contente"]}
+},
+{ id:"u8", title:"Família e pessoas", desc:"Pai, mãe, irmã, idade",
+  intro:`<h3>Unidade 8 — Família e pessoas</h3>Falar da tua família e da tua idade.<ul>
+  <li>Idade usa <b>tener</b> (ter): <b>tengo 24 años</b>. Nunca "soy 24".</li>
+  <li><b>Padres</b> = pai e mãe juntos (os pais). Parientes = parentes.</li>
+  <li><b>Mi</b> (meu/minha) não muda: mi papá, mi mamá. No plural: <b>mis</b>.</li></ul>`,
+  learn:[
+    {es:"mi papá", pt:"meu pai", pr:"mi papá"},
+    {es:"mi mamá", pt:"minha mãe", pr:"mi mamá"},
+    {es:"mis padres", pt:"meus pais", pr:"mis pádres", tip:"Padres = pai e mãe juntos."},
+    {es:"mi hermana", pt:"minha irmã", pr:"mi ermána", tip:"H mudo."},
+    {es:"mi cuñado", pt:"meu cunhado", pr:"mi kunhádo"},
+    {es:"mi sobrino", pt:"meu sobrinho", pr:"mi sobríno"},
+    {es:"mis amigos", pt:"meus amigos", pr:"mis amígos"},
+    {es:"tengo veinticuatro años", pt:"tenho 24 anos", pr:"têngo beintikuátro ánhos", tip:"Idade = TENER. Años com Ñ!"},
+    {es:"¿cuántos años tenés?", pt:"quantos anos tu tem?", pr:"kuántos ánhos tenés"},
+  ],
+  frases:[
+    {es:"Vivo con mis padres.", pt:"Moro com meus pais."},
+    {es:"Tengo veinticuatro años.", pt:"Tenho vinte e quatro anos.", why:"Idade usa TENER."},
+    {es:"¿Cuántos años tenés?", pt:"Quantos anos tu tem?"},
+    {es:"Mi hermana tiene dos hijos.", pt:"Minha irmã tem dois filhos."},
+    {es:"Mi mamá cocina muy bien.", pt:"Minha mãe cozinha muito bem."},
+    {es:"Mi papá también es repartidor.", pt:"Meu pai também é entregador."},
+  ],
+  dialogo:{linhas:[["A","¿Vivís solo?"],["B","No, vivo con mis padres."],["A","¿Tenés hermanos?"],["B","Sí, tengo una hermana. Ella tiene dos hijos."]],
+    perg:"Com quem a pessoa B mora?", certo:"Com os pais", erradas:["Sozinha","Com a irmã"]}
+},
+{ id:"u9", title:"Horas e dias", desc:"Dias da semana e que horas são",
+  intro:`<h3>Unidade 9 — Horas e dias</h3>Dias da semana e horas, pra marcar compromisso e falar da rotina.<ul>
+  <li>Os dias são parecidos com o português de antigamente: <b>lunes, martes, miércoles…</b></li>
+  <li>"Que horas são?" = <b>¿Qué hora es?</b> (singular!). Uma hora: <b>es la una</b>. O resto: <b>son las ocho</b>.</li>
+  <li>"No sábado" = <b>el sábado</b> (sem "no").</li></ul>`,
+  learn:[
+    {es:"lunes", pt:"segunda", pr:"lúnes"},{es:"martes", pt:"terça", pr:"mártes"},{es:"miércoles", pt:"quarta", pr:"miérkoles"},
+    {es:"jueves", pt:"quinta", pr:"ruêbes"},{es:"viernes", pt:"sexta", pr:"biérnes"},{es:"sábado", pt:"sábado", pr:"sábado"},{es:"domingo", pt:"domingo", pr:"domíngo"},
+    {es:"¿qué hora es?", pt:"que horas são?", pr:"ké óra és", tip:"Em espanhol é no singular: qué HORA es."},
+    {es:"son las ocho", pt:"são oito horas", pr:"son las ótcho"},
+    {es:"de la mañana", pt:"da manhã", pr:"de la manhána", tip:"Mañana = amanhã E manhã."},
+    {es:"de la noche", pt:"da noite", pr:"de la nótche"},
+    {es:"temprano", pt:"cedo", pr:"temprano"},
+    {es:"tarde", pt:"tarde / atrasado", pr:"tárde"},
+  ],
+  frases:[
+    {es:"¿Qué hora es?", pt:"Que horas são?"},
+    {es:"Son las ocho de la mañana.", pt:"São oito da manhã."},
+    {es:"El sábado trabajo en la pizzería.", pt:"No sábado trabalho na pizzaria.", why:"\"No sábado\" = EL sábado."},
+    {es:"Me levanto muy temprano.", pt:"Acordo muito cedo."},
+    {es:"El domingo voy a la iglesia.", pt:"No domingo vou à igreja."},
+    {es:"Llego tarde.", pt:"Chego atrasado."},
+  ],
+  dialogo:{linhas:[["A","¿Trabajás el sábado?"],["B","Sí, el sábado trabajo de noche."],["A","¿Y el lunes?"],["B","El lunes me levanto temprano, a las cuatro."]],
+    perg:"A que horas B acorda na segunda?", certo:"Às quatro", erradas:["Às oito","À noite"]}
+},
+{ id:"u10", title:"Espanhol de rua", desc:"Argentina e Paraguai: vos, che, gírias",
+  intro:`<h3>Unidade 10 — Espanhol de rua (Argentina/Paraguai)</h3>O que tu vai ouvir de verdade na rua.<ul>
+  <li><b>Che</b>: chamar alguém ("ô, cara"). No Paraguai é usado direto (vem até do guarani, onde quer dizer "meu").</li>
+  <li><b>Re</b> = muito: "re lindo" = muito bonito.</li>
+  <li>O <b>ll</b> e o <b>y</b> soam "sh/j": <b>yo</b> ≈ "sho", <b>calle</b> ≈ "káshe". No Paraguai é mais suave, tipo "j".</li></ul>`,
+  learn:[
+    {es:"che", pt:"ô, cara / mano", pr:"tchê", tip:"Igual o gaúcho! No Paraguai é muito usado."},
+    {es:"¿qué onda?", pt:"e aí? / qual é?", pr:"ké ônda"},
+    {es:"dale", pt:"beleza / bora / pode ser", pr:"dále", tip:"Serve pra tudo: concordar, apressar, despedir."},
+    {es:"re", pt:"muito", pr:"rre", tip:"Re lindo = muito bonito. Re caro = muito caro."},
+    {es:"posta", pt:"de verdade / sério", pr:"pósta", tip:"¿Posta? = Sério?"},
+    {es:"laburo", pt:"trabalho (gíria)", pr:"labúro"},
+    {es:"guita", pt:"dinheiro (gíria)", pr:"guíta", tip:"Na Argentina. No Paraguai o mais comum é PLATA."},
+    {es:"pibe", pt:"moleque / garoto", pr:"píbe"},
+    {es:"quilombo", pt:"bagunça / confusão", pr:"kilómbo"},
+    {es:"¿viste?", pt:"né? / sabe?", pr:"bíste"},
+  ],
+  frases:[
+    {es:"¿Qué onda, che?", pt:"E aí, mano?"},
+    {es:"Dale, nos vemos mañana.", pt:"Beleza, nos vemos amanhã."},
+    {es:"Tengo mucho laburo.", pt:"Tenho muito trabalho."},
+    {es:"Es re lindo.", pt:"É muito bonito."},
+    {es:"¿Posta?", pt:"Sério?"},
+    {es:"Esto es un quilombo.", pt:"Isso é uma bagunça."},
+    {es:"No tengo guita, ¿viste?", pt:"Não tenho grana, sabe?"},
+  ],
+  dialogo:{linhas:[["A","¿Qué onda, che? ¿Todo bien?"],["B","Todo bien. Tengo re mucho laburo hoy."],["A","¿Posta? ¿Y a la noche?"],["B","A la noche estoy libre. Dale, nos vemos."]],
+    perg:"Quando B tá livre?", certo:"À noite", erradas:["Agora","De manhã"]}
+}
 ];
 
 /* ===================== ESTADO ===================== */
@@ -552,7 +664,7 @@ function home(){
     });
     h+=`</div></div>`;
   });
-  h+=`<p class="note">Dica: aperta 🔊 sempre e repete em voz alta. 🐢 fala devagar. · versão 5</p>
+  h+=`<p class="note">Dica: aperta 🔊 sempre e repete em voz alta. 🐢 fala devagar. · versão 6</p>
     <p class="note"><button class="sbtn" id="exp">📋 Copiar progresso pro Jarvis</button></p><div id="expo"></div>`;
   $("#app").innerHTML=h;
   document.querySelectorAll(".lvb").forEach(b=>b.onclick=()=>start(+b.dataset.u,+b.dataset.l));

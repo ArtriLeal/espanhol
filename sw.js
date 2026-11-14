@@ -1,5 +1,5 @@
 // Deixa o app abrir offline depois da primeira visita. Sempre tenta a versão nova primeiro.
-const C="esp-v5";
+const C="esp-v6";
 self.addEventListener("install",e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(["./","index.html","audio.js","manifest.json","icon-192.png"])));self.skipWaiting();});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))));self.clients.claim();});
 self.addEventListener("fetch",e=>{e.respondWith(fetch(e.request,{cache:"no-cache"}).then(r=>{const cp=r.clone();caches.open(C).then(c=>c.put(e.request,cp));return r;}).catch(()=>caches.match(e.request)));});
