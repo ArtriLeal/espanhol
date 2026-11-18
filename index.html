@@ -644,7 +644,7 @@ function unitState(i){
   const prevDone=i===0||(S.done[UNITS[i-1].id]||[]).includes(3)||(S.done[UNITS[i-1].id]||[]).includes(2);
   return {u,d,open:prevDone};
 }
-function home(){
+function home(goTo=true){
   view="home";
   const nErr=Object.keys(S.errors).length;
   const t=today(); const streakOk=S.lastDay===t;
@@ -657,21 +657,31 @@ function home(){
     const st=unitState(i);
     const names=["1 · Aprender","2 · Frases","3 · Desafio"];
     let next=[1,2,3].find(l=>!st.d.includes(l));
-    h+=`<div class="unit ${st.open?"":"locked"}"><h2>${i+1}. ${esc(u.title)}</h2><p>${esc(u.desc)}${st.open?"":" · 🔒 termina a anterior (nível 2) pra abrir"}</p><div class="lv">`;
+    h+=`<div class="unit ${st.open?"":"locked"}" id="unit${i}"><h2>${i+1}. ${esc(u.title)}</h2><p>${esc(u.desc)}${st.open?"":" · 🔒 termina a anterior (nível 2) pra abrir"}</p><div class="lv">`;
     [1,2,3].forEach(l=>{
       const done=st.d.includes(l), can=st.open&&(l===1||st.d.includes(l-1)||done);
       h+=`<button class="lvb ${done?"done":(can&&l===next?"next":"")}" ${can?"":"disabled"} data-u="${i}" data-l="${l}">${done?"✓ ":""}${names[l-1]}</button>`;
     });
     h+=`</div></div>`;
   });
-  h+=`<p class="note">Dica: aperta 🔊 sempre e repete em voz alta. 🐢 fala devagar. · versão 6</p>
+  h+=`<p class="note">Dica: aperta 🔊 sempre e repete em voz alta. 🐢 fala devagar. · versão 7</p>
     <p class="note"><button class="sbtn" id="exp">📋 Copiar progresso pro Jarvis</button></p><div id="expo"></div>`;
   $("#app").innerHTML=h;
   document.querySelectorAll(".lvb").forEach(b=>b.onclick=()=>start(+b.dataset.u,+b.dataset.l));
   const r=$("#rev"); if(r) r.onclick=()=>start(-1,0);
   $("#exp").onclick=()=>{const t=progressText(); let ok=false;
     try{navigator.clipboard.writeText(t).then(()=>{$("#exp").textContent="✓ Copiado! Cola no chat do Jarvis";}).catch(()=>showExp(t));}catch(e){showExp(t);} };
-  $("#snd").onclick=()=>{SOUND=!SOUND;try{localStorage.setItem("esp_sound",SOUND?"1":"0");}catch(e){} home(); if(SOUND)SFX.ok();};
+  $("#snd").onclick=()=>{SOUND=!SOUND;try{localStorage.setItem("esp_sound",SOUND?"1":"0");}catch(e){} home(false); if(SOUND)SFX.ok();};
+  if(goTo) scrollToCurrent();
+}
+// Abre a trilha já onde ele parou: no próximo nível a fazer (ou na última unidade aberta).
+try{history.scrollRestoration="manual";}catch(e){}
+function scrollToCurrent(){
+  let el=document.querySelector(".lvb.next");
+  if(!el){const open=[...document.querySelectorAll(".unit:not(.locked)")]; el=open[open.length-1];}
+  if(!el||!el.closest) return;
+  const u=el.closest(".unit")||el;
+  requestAnimationFrame(()=>{const y=u.getBoundingClientRect().top+window.scrollY-120; window.scrollTo({top:Math.max(0,y),behavior:"auto"});});
 }
 function showExp(t){$("#expo").innerHTML=`<textarea style="margin:0 16px;width:calc(100% - 32px);font-size:13px" readonly>${esc(t)}</textarea><p class="note">Seleciona tudo, copia e cola no chat.</p>`;}
 function progressText(){
